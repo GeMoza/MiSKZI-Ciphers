@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "id": 5,
+      "mode": "decrypt",
+      "text": "4/2, 2/8, 4/2, 4/2, 4/14, 3/1, 2/6",
+      "key": {
+        "key_path": "data/book_cipher/key.txt",
+        "e_instead_of_ee": true
+      }
+    }
+  ]
+}

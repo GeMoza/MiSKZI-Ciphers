@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "id": 5,
+      "mode": "decrypt",
+      "text": "ОЮРУГЯ",
+      "key": {
+        "method": 3
+      }
+    }
+  ]
+}
