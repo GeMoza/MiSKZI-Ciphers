@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from common.keyparse import reject_unknown_keys
-from common.types import CipherInfo, Key
+from miskzi_ciphers.common.keyparse import reject_unknown_keys
+from miskzi_ciphers.common.types import CipherInfo, Key
 
 
 # Таблица 2 (фиксированный квадрат 4x4)

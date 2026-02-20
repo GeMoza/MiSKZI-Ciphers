@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from common.types import CipherInfo, Key
-from common.keyparse import reject_unknown_keys, require, as_int
+from miskzi_ciphers.common.types import CipherInfo, Key
+from miskzi_ciphers.common.keyparse import reject_unknown_keys, require, as_int
 
 RUS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 

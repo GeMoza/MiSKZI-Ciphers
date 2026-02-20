@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from common.keyparse import reject_unknown_keys, require, as_enum_int
-from common.types import CipherInfo, Key
+from miskzi_ciphers.common.keyparse import reject_unknown_keys, require, as_enum_int
+from miskzi_ciphers.common.types import CipherInfo, Key
 
 
 # Таблица из методички (рис. 3), координаты: (вертикальная = номер столбца 1..6, горизонтальная = номер строки 1..6)

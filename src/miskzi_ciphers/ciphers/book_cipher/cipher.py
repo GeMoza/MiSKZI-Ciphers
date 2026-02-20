@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from common.keyparse import reject_unknown_keys, require, optional, as_str, as_bool
-from common.types import CipherInfo, Key
+from miskzi_ciphers.common.keyparse import reject_unknown_keys, require, optional, as_str, as_bool
+from miskzi_ciphers.common.types import CipherInfo, Key
 
 
 _COORD_RE = re.compile(r"(\d+)\s*/\s*(\d+)")

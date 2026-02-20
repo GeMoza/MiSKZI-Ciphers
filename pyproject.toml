@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "MiSKZI-Ciphers"
-version = "0.4.2"
+name = "miskzi-ciphers"
+version = "0.5.0"
 description = "Educational toolkit of classical ciphers for MiSKZI practice"
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
@@ -29,6 +29,9 @@ dev = [
     "pytest>=7.4",
     "ruff>=0.3",
 ]
+
+[project.scripts]
+miskzi = "miskzi_ciphers.cli:main"
 
 [project.urls]
 Repository = "https://github.com/<your-username>/MiSKZI-Ciphers"

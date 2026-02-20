@@ -1,15 +1,15 @@
-from ciphers.caesar.cipher import CaesarCipher
-from common.registry import load_cipher
+from miskzi_ciphers.ciphers.caesar.cipher import CaesarCipher
+from miskzi_ciphers.common.registry import load_cipher
 
 def test_caesar_encrypt_example():
     c = CaesarCipher()
     key = c.parse_key({"k": 3})
-    assert c.encrypt("МИРЭА", key) == "ПЛФАГ"
+    assert c.encrypt("МИРЭА", key) == "ПЛУАГ"
 
 def test_caesar_decrypt_example():
     c = CaesarCipher()
     key = c.parse_key({"k": 3})
-    assert c.decrypt("ПЛФАГ", key) == "МИРЭА"
+    assert c.decrypt("ПЛУАГ", key) == "МИРЭА"
 
 def test_caesar_key_validation_missing():
     c = CaesarCipher()

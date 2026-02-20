@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Iterable
 
-from common.types import Cipher
+from miskzi_ciphers.common.types import Cipher
 
 
 @dataclass(frozen=True)
 class CipherRef:
     """Ссылка на фабрику шифра."""
     name: str
-    module: str  # e.g. "ciphers.caesar.cipher"
+    module: str  # e.g. "miskzi_ciphers.ciphers.caesar.cipher"
 
 
 class CipherRegistry:
@@ -74,12 +74,12 @@ class CipherRegistry:
 # Статический реестр (ручной список). Позже можно заменить на автодискавери.
 REGISTRY = CipherRegistry(
     refs=[
-        CipherRef("book_cipher", "ciphers.book_cipher.cipher"),
-        CipherRef("scytale", "ciphers.scytale.cipher"),
-        CipherRef("polybius", "ciphers.polybius.cipher"),
-        CipherRef("magic_square", "ciphers.magic_square.cipher"),
-        CipherRef("caesar", "ciphers.caesar.cipher"),
-        CipherRef("atbash", "ciphers.atbash.cipher"),
+        CipherRef("book_cipher", "miskzi_ciphers.ciphers.book_cipher.cipher"),
+        CipherRef("scytale", "miskzi_ciphers.ciphers.scytale.cipher"),
+        CipherRef("polybius", "miskzi_ciphers.ciphers.polybius.cipher"),
+        CipherRef("magic_square", "miskzi_ciphers.ciphers.magic_square.cipher"),
+        CipherRef("caesar", "miskzi_ciphers.ciphers.caesar.cipher"),
+        CipherRef("atbash", "miskzi_ciphers.ciphers.atbash.cipher"),
     ]
 )
 
