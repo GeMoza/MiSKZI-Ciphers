@@ -1,17 +1,14 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "miskzi-ciphers"
-version = "0.5.0"
+version = "0.5.2"
 description = "Educational toolkit of classical ciphers for MiSKZI practice"
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
 license = { text = "MIT" }
-authors = [
-    { name = "Your Name" }
-]
 keywords = ["cryptography", "classical-ciphers", "education", "MiSKZI"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -33,8 +30,6 @@ dev = [
 [project.scripts]
 miskzi = "miskzi_ciphers.cli:main"
 
-[project.urls]
-Repository = "https://github.com/<your-username>/MiSKZI-Ciphers"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -43,7 +38,6 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
 addopts = "-ra -q"
 testpaths = ["tests"]
 

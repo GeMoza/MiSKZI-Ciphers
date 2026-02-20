@@ -8,8 +8,7 @@ from typing import Any
 
 from miskzi_ciphers.common.registry import load_cipher, list_ciphers
 from miskzi_ciphers.common.io_utils import load_variants, read_text
-
-DATA_DIR = Path("data")
+from miskzi_ciphers.common.paths import get_data_dir
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,8 +59,8 @@ def parse_cli_key(pairs: list[str]) -> dict[str, Any]:
     return out
 
 
-def load_text_and_variant_key(cipher_name: str, variant_id: int) -> tuple[str, dict[str, Any], str]:
-    variants_path = DATA_DIR / cipher_name / "variants.json"
+def load_text_and_variant_key(data_dir: Path, cipher_name: str, variant_id: int) -> tuple[str, dict[str, Any], str]:
+    variants_path = data_dir / cipher_name / "variants.json"
     variants = load_variants(variants_path)
     v = next((x for x in variants if x.id == variant_id), None)
     if v is None:
@@ -76,8 +75,8 @@ def ensure_cipher_arg(cipher_name: str | None) -> str:
     return cipher_name
 
 
-def print_variants(cipher_name: str) -> None:
-    variants_path = DATA_DIR / cipher_name / "variants.json"
+def print_variants(data_dir: Path, cipher_name: str) -> None:
+    variants_path = data_dir / cipher_name / "variants.json"
     variants = load_variants(variants_path)
     if not variants:
         print("(no variants)")
@@ -184,7 +183,8 @@ def main(argv: list[str] | None = None) -> int:
 
         # 2б) Вывести варианты и выход
         if args.list_variants:
-            print_variants(cipher_name)
+            data_dir = get_data_dir()
+            print_variants(data_dir, cipher_name)
             return 0
 
         # 3) Фактическое шифрование/расшифровка: источник сначала, потом режим
@@ -196,9 +196,11 @@ def main(argv: list[str] | None = None) -> int:
         elif args.text_file is not None:
             text = read_text(Path(args.text_file))
         elif args.free:
-            text = read_text(DATA_DIR / cipher_name / "free_text.txt")
+            data_dir = get_data_dir()
+            text = read_text(data_dir / cipher_name / "free_text.txt")
         elif args.variant is not None:
-            text, variant_key, variant_mode = load_text_and_variant_key(cipher_name, args.variant)
+            data_dir = get_data_dir()
+            text, variant_key, variant_mode = load_text_and_variant_key(data_dir, cipher_name, args.variant)
         else:
             raise ValueError("Missing input source. Use one of: --text, --text-file, --free, --variant.")
 
