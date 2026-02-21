@@ -2,9 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import import_module
+import logging
+import pkgutil
 from typing import Any, Iterable
 
+import miskzi_ciphers.ciphers as ciphers_pkg
+
 from miskzi_ciphers.common.types import Cipher
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -32,10 +38,12 @@ class CipherRegistry:
         ref = self._refs[name]
         mod = import_module(ref.module)
 
-        if not hasattr(mod, "get_cipher"):
-            raise ImportError(f"Module '{ref.module}' must export get_cipher().")
-
-        obj = mod.get_cipher()
+        if hasattr(mod, "get_cipher") and callable(mod.get_cipher):
+            obj = mod.get_cipher()
+        elif hasattr(mod, "CIPHER"):
+            obj = mod.CIPHER
+        else:
+            raise ImportError(f"Module '{ref.module}' must export get_cipher() or CIPHER.")
         self._validate_cipher(obj, expected_name=ref.name, module=ref.module)
         return obj  # type: ignore[return-value]
 
@@ -71,17 +79,39 @@ class CipherRegistry:
             raise TypeError(f"{expected_name}.describe() must return dict, got {type(info).__name__}")
 
 
-# Статический реестр (ручной список). Позже можно заменить на автодискавери.
-REGISTRY = CipherRegistry(
-    refs=[
-        CipherRef("book_cipher", "miskzi_ciphers.ciphers.book_cipher.cipher"),
-        CipherRef("scytale", "miskzi_ciphers.ciphers.scytale.cipher"),
-        CipherRef("polybius", "miskzi_ciphers.ciphers.polybius.cipher"),
-        CipherRef("magic_square", "miskzi_ciphers.ciphers.magic_square.cipher"),
-        CipherRef("caesar", "miskzi_ciphers.ciphers.caesar.cipher"),
-        CipherRef("atbash", "miskzi_ciphers.ciphers.atbash.cipher"),
-    ]
-)
+def discover_cipher_modules() -> list[str]:
+    """Discover cipher implementation modules under miskzi_ciphers.ciphers.*."""
+    modules: list[str] = []
+    for item in sorted(pkgutil.iter_modules(ciphers_pkg.__path__), key=lambda x: x.name):
+        if not item.ispkg:
+            continue
+        module_path = f"miskzi_ciphers.ciphers.{item.name}.cipher"
+        try:
+            mod = import_module(module_path)
+        except Exception as exc:  # pragma: no cover - defensive discovery path
+            logger.debug("Skipping %s: import failed (%s)", module_path, exc)
+            continue
+
+        has_factory = hasattr(mod, "get_cipher") and callable(mod.get_cipher)
+        has_instance = hasattr(mod, "CIPHER")
+        if has_factory or has_instance:
+            modules.append(module_path)
+            continue
+
+        logger.debug("Skipping %s: no get_cipher() or CIPHER", module_path)
+    return modules
+
+
+def _build_registry() -> CipherRegistry:
+    modules = discover_cipher_modules()
+    if not modules:
+        raise RuntimeError("No ciphers discovered in package 'miskzi_ciphers.ciphers'.")
+
+    refs = [CipherRef(name=module.split(".")[-2], module=module) for module in modules]
+    return CipherRegistry(refs=refs)
+
+
+REGISTRY = _build_registry()
 
 
 def load_cipher(name: str) -> Cipher:

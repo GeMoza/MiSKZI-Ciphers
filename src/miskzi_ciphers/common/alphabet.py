@@ -1,18 +1,26 @@
 from __future__ import annotations
 
+from functools import lru_cache
+from types import MappingProxyType
 from typing import Callable
 
 RU_33 = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 
 
-def build_index(alphabet: str) -> dict[str, int]:
-    """Build a symbol -> index mapping for an alphabet with unique characters."""
+@lru_cache(maxsize=32)
+def _cached_index(alphabet: str) -> MappingProxyType[str, int]:
+    """Build and cache symbol->index mapping for alphabets with unique characters."""
     index: dict[str, int] = {}
     for i, ch in enumerate(alphabet):
         if ch in index:
             raise ValueError(f"alphabet contains duplicate symbol: {ch!r}")
         index[ch] = i
-    return index
+    return MappingProxyType(index)
+
+
+def build_index(alphabet: str) -> MappingProxyType[str, int]:
+    """Return cached symbol->index mapping. Returned mapping must not be mutated."""
+    return _cached_index(alphabet)
 
 
 def normalize(text: str, *, to_upper: bool = True) -> str:
@@ -22,7 +30,7 @@ def normalize(text: str, *, to_upper: bool = True) -> str:
 
 def shift_char(ch: str, *, alphabet: str, k: int) -> str | None:
     """Shift one symbol by k within alphabet, or return None if symbol is outside alphabet."""
-    idx = build_index(alphabet).get(ch)
+    idx = _cached_index(alphabet).get(ch)
     if idx is None:
         return None
     return alphabet[(idx + k) % len(alphabet)]
