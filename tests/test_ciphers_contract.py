@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from miskzi_ciphers.common.alphabet import RU_33
 from miskzi_ciphers.common.paths import get_data_dir
 from miskzi_ciphers.common.registry import REGISTRY
 
@@ -41,6 +42,23 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         "polybius": ({"method": 1}, "ПРИВЕТ, МИР!"),
         "magic_square": ({}, "АБВГДЕЁЖЗИЙКЛМНО"),
         "book_cipher": ({"key_path": str(key_path)}, "ПРИВЕТМИР"),
+        "affine": ({"a": 5, "b": 3}, "ПРИВЕТ, МИР!"),
+        "binary_code": ({}, "МИРЭА"),
+        "litorea": ({}, "МИРЭА"),
+        "vigenere": ({"keyword": "ГДЕ ОН"}, "ПРИВЕТ, МИР!"),
+        "alberti": (
+            {
+                "outer": RU_33,
+                "inner": RU_33[::-1],
+                "index_char": "А",
+                "shift_every": 5,
+                "shift_step": 1,
+                "shift_dir": "left",
+                "emit_prefix": True,
+                "start_outer": "А",
+            },
+            "ПРИВЕТМИР",
+        ),
     }
 
 
