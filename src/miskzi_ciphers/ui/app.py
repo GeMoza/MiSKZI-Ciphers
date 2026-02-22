@@ -25,6 +25,7 @@ def _init_playground_state() -> None:
     st.session_state.setdefault("pg_key_raw_json", "{}")
     st.session_state.setdefault("pg_key_form_values", {})
     st.session_state.setdefault("pg_key_mode", t("Form"))
+    st.session_state.setdefault("pg_feedback", None)
 
 
 def _form_default_value(param: dict[str, Any], current: dict[str, Any]) -> Any:
@@ -150,7 +151,102 @@ def _load_variant_into_playground(item: dict[str, Any]) -> None:
         st.session_state["pg_plaintext"] = ""
         st.session_state["pg_decrypted"] = ""
 
-    st.info(f"{t('Loaded variant')}. {t('Read-only: does not modify saved data')}")
+    st.session_state["pg_feedback"] = (
+        "info",
+        f"{t('Loaded variant')}. {t('Read-only: does not modify saved data')}",
+    )
+
+
+def _set_feedback(level: str, message: str) -> None:
+    st.session_state["pg_feedback"] = (level, message)
+
+
+def _show_feedback() -> None:
+    feedback = st.session_state.get("pg_feedback")
+    if not feedback:
+        return
+    level, message = feedback
+    if level == "success":
+        st.success(message)
+    elif level == "error":
+        st.error(message)
+    else:
+        st.info(message)
+
+
+def _raw_key_for_callback() -> dict[str, Any] | None:
+    if st.session_state.get("pg_key_mode", t("Form")) == t("Raw JSON"):
+        raw_text = str(st.session_state.get("pg_key_raw_json", "{}"))
+        parsed = _parse_raw_json(raw_text)
+        if parsed is None:
+            return None
+        st.session_state["pg_key_form_values"] = dict(parsed)
+        return parsed
+
+    values = st.session_state.get("pg_key_form_values", {})
+    if isinstance(values, dict):
+        return dict(values)
+    return {}
+
+
+def _on_load_variant(items: list[dict[str, Any]]) -> None:
+    selected = str(st.session_state.get("pg_variant_select", ""))
+    options = [_variant_preview(v) for v in items]
+    if selected not in options:
+        _set_feedback("error", t("No variants"))
+        return
+    idx = options.index(selected)
+    _load_variant_into_playground(items[idx])
+
+
+def _on_load_free_text(cipher_id: str) -> None:
+    free_text = service.load_free_text(cipher_id)
+    st.session_state["pg_plaintext"] = free_text
+    st.session_state["pg_ciphertext"] = ""
+    st.session_state["pg_decrypted"] = ""
+    _set_feedback("info", f"{t('Loaded free_text')}. {t('Read-only: does not modify saved data')}")
+
+
+def _on_encrypt(cipher_id: str) -> None:
+    raw_key = _raw_key_for_callback()
+    if raw_key is None:
+        return
+    try:
+        out = service.encrypt(cipher_id, str(st.session_state.get("pg_plaintext", "")), raw_key)
+        st.session_state["pg_ciphertext"] = out
+        _set_feedback("success", t("Encrypted"))
+    except Exception as e:
+        _set_feedback("error", str(e))
+
+
+def _on_decrypt(cipher_id: str) -> None:
+    raw_key = _raw_key_for_callback()
+    if raw_key is None:
+        return
+    try:
+        out = service.decrypt(cipher_id, str(st.session_state.get("pg_ciphertext", "")), raw_key)
+        st.session_state["pg_decrypted"] = out
+        _set_feedback("success", t("Decrypted action"))
+    except Exception as e:
+        _set_feedback("error", str(e))
+
+
+def _on_roundtrip(cipher_id: str) -> None:
+    raw_key = _raw_key_for_callback()
+    if raw_key is None:
+        return
+    plaintext = str(st.session_state.get("pg_plaintext", ""))
+    try:
+        enc = service.encrypt(cipher_id, plaintext, raw_key)
+        dec = service.decrypt(cipher_id, enc, raw_key)
+        st.session_state["pg_ciphertext"] = enc
+        st.session_state["pg_decrypted"] = dec
+        if dec == plaintext:
+            _set_feedback("success", f"{t('Roundtrip equals')}: True")
+        else:
+            _set_feedback("error", f"{t('Roundtrip equals')}: False\nExpected: {plaintext}\nGot: {dec}")
+    except Exception as e:
+        _set_feedback("error", str(e))
 
 
 def _playground() -> None:
@@ -175,17 +271,15 @@ def _playground() -> None:
     key_mode = st.radio(t("Key input mode"), key_modes, index=mode_index, horizontal=True)
     st.session_state["pg_key_mode"] = key_mode
 
-    raw_key: dict[str, Any] = {}
     if key_mode == t("Form"):
-        raw_key = _build_form_key(cipher_id, desc)
+        _build_form_key(cipher_id, desc)
     else:
-        raw_text = st.text_area(t("Raw key JSON"), key="pg_key_raw_json")
-        parsed = _parse_raw_json(raw_text)
-        raw_key = {} if parsed is None else parsed
-        if parsed is not None:
-            st.session_state["pg_key_form_values"] = dict(parsed)
+        st.text_area(t("Raw key JSON"), key="pg_key_raw_json")
 
     if st.button(t("Parse key"), key="pg_parse"):
+        raw_key = _raw_key_for_callback()
+        if raw_key is None:
+            return
         try:
             parsed_key = service.parse_key(cipher_id, raw_key)
             st.success(t("Key parsed"))
@@ -203,58 +297,30 @@ def _playground() -> None:
         valid_items = [x for x in items if isinstance(x, dict)]
         if valid_items:
             options = [_variant_preview(v) for v in valid_items]
-            selected = st.selectbox(t("Select variant"), options, key="pg_variant_select")
-            if st.button(t("Load variant"), key="pg_load_variant"):
-                idx = options.index(selected)
-                _load_variant_into_playground(valid_items[idx])
+            st.selectbox(t("Select variant"), options, key="pg_variant_select")
+            st.button(t("Load variant"), key="pg_load_variant", on_click=_on_load_variant, args=(valid_items,))
         else:
             st.info(t("No variants"))
     elif source == t("Free text"):
-        if st.button(t("Load free_text"), key="pg_load_free_text"):
-            free_text = service.load_free_text(cipher_id)
-            st.session_state["pg_plaintext"] = free_text
-            st.session_state["pg_ciphertext"] = ""
-            st.session_state["pg_decrypted"] = ""
-            st.info(f"{t('Loaded free_text')}. {t('Read-only: does not modify saved data')}")
+        st.button(t("Load free_text"), key="pg_load_free_text", on_click=_on_load_free_text, args=(cipher_id,))
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        plaintext = st.text_area(t("Plaintext"), key="pg_plaintext")
+        st.text_area(t("Plaintext"), key="pg_plaintext")
     with col2:
-        ciphertext = st.text_area(t("Ciphertext"), key="pg_ciphertext")
+        st.text_area(t("Ciphertext"), key="pg_ciphertext")
     with col3:
-        decrypted = st.text_area(t("Decrypted"), key="pg_decrypted")
+        st.text_area(t("Decrypted"), key="pg_decrypted")
+
+    _show_feedback()
 
     btn1, btn2, btn3 = st.columns(3)
     with btn1:
-        if st.button(t("Encrypt")):
-            try:
-                out = service.encrypt(cipher_id, plaintext, raw_key)
-                st.session_state["pg_ciphertext"] = out
-                st.success(t("Encrypted"))
-            except Exception as e:
-                st.error(str(e))
+        st.button(t("Encrypt"), on_click=_on_encrypt, args=(cipher_id,))
     with btn2:
-        if st.button(t("Decrypt")):
-            try:
-                out = service.decrypt(cipher_id, ciphertext, raw_key)
-                st.session_state["pg_decrypted"] = out
-                st.success(t("Decrypted action"))
-            except Exception as e:
-                st.error(str(e))
+        st.button(t("Decrypt"), on_click=_on_decrypt, args=(cipher_id,))
     with btn3:
-        if st.button(t("Roundtrip")):
-            try:
-                enc = service.encrypt(cipher_id, plaintext, raw_key)
-                dec = service.decrypt(cipher_id, enc, raw_key)
-                st.session_state["pg_ciphertext"] = enc
-                st.session_state["pg_decrypted"] = dec
-                if dec == plaintext:
-                    st.success(f"{t('Roundtrip equals')}: True")
-                else:
-                    st.error(f"{t('Roundtrip equals')}: False\nExpected: {plaintext}\nGot: {dec}")
-            except Exception as e:
-                st.error(str(e))
+        st.button(t("Roundtrip"), on_click=_on_roundtrip, args=(cipher_id,))
 
 
 def _data_manager() -> None:
