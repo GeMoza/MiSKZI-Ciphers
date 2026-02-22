@@ -39,6 +39,17 @@ def _form_default_value(param: dict[str, Any], current: dict[str, Any]) -> Any:
     return ""
 
 
+def _default_from_describe(param: dict[str, Any]) -> Any:
+    if "default" in param:
+        return param["default"]
+    if "example" in param:
+        return param["example"]
+    p_type = str(param.get("type", "str"))
+    if p_type == "bool":
+        return False
+    return ""
+
+
 def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
     values = st.session_state.get("pg_key_form_values", {})
     if not isinstance(values, dict):
@@ -58,7 +69,7 @@ def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
             label += f" [{t('Optional')}]"
 
         default = _form_default_value(p, values)
-        key = f"pg_form_{name}"
+        key = f"pg_key.{cipher_id}.{name}"
 
         if p_type == "int":
             val = st.text_input(label, value=str(default) if default != "" else "", key=key)
@@ -157,6 +168,19 @@ def _load_variant_into_playground(item: dict[str, Any]) -> None:
     )
 
 
+def _sync_key_form_widgets(cipher_id: str, key_obj: dict[str, Any]) -> None:
+    desc = service.get_cipher_description(cipher_id)
+    params = desc.get("params", []) if isinstance(desc, dict) else []
+    for p in params or []:
+        if not isinstance(p, dict):
+            continue
+        name = str(p.get("name", "")).strip()
+        if not name:
+            continue
+        default = _default_from_describe(p)
+        st.session_state[f"pg_key.{cipher_id}.{name}"] = key_obj.get(name, default)
+
+
 def _set_feedback(level: str, message: str) -> None:
     st.session_state["pg_feedback"] = (level, message)
 
@@ -189,14 +213,20 @@ def _raw_key_for_callback() -> dict[str, Any] | None:
     return {}
 
 
-def _on_load_variant(items: list[dict[str, Any]]) -> None:
+def _on_load_variant(cipher_id: str, items: list[dict[str, Any]]) -> None:
     selected = str(st.session_state.get("pg_variant_select", ""))
     options = [_variant_preview(v) for v in items]
     if selected not in options:
         _set_feedback("error", t("No variants"))
         return
     idx = options.index(selected)
-    _load_variant_into_playground(items[idx])
+    item = items[idx]
+    _load_variant_into_playground(item)
+    key_obj = item.get("key", {})
+    if not isinstance(key_obj, dict):
+        key_obj = {}
+    st.session_state["pg_key_raw_json"] = json.dumps(key_obj, ensure_ascii=False, indent=2)
+    _sync_key_form_widgets(cipher_id, key_obj)
 
 
 def _on_load_free_text(cipher_id: str) -> None:
@@ -298,7 +328,7 @@ def _playground() -> None:
         if valid_items:
             options = [_variant_preview(v) for v in valid_items]
             st.selectbox(t("Select variant"), options, key="pg_variant_select")
-            st.button(t("Load variant"), key="pg_load_variant", on_click=_on_load_variant, args=(valid_items,))
+            st.button(t("Load variant"), key="pg_load_variant", on_click=_on_load_variant, args=(cipher_id, valid_items))
         else:
             st.info(t("No variants"))
     elif source == t("Free text"):
