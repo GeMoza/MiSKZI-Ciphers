@@ -3,16 +3,16 @@
     {
       "id": 5,
       "mode": "decrypt",
-      "text": "ц ц э ц ю э к б п ю",
+      "text": "Ц Ц Э Ц Ю Э К Б П Ю Ц",
       "key": {
         "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
-        "inner": "ЯЮЭЬЫЪЩШЧЦХФУТСРПОНМЛКЙИЗЖЁЕДГВБА",
-        "index_char": "А",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
         "shift_every": 5,
         "shift_step": 1,
         "shift_dir": "left",
         "emit_prefix": true,
-        "start_outer": "А"
+        "start_outer": "Ц"
       }
     }
   ]
