@@ -1,3 +1,10 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": 5,
+      "mode": "decrypt",
+      "text": "Цскротяица",
+      "key": {}
+    }
+  ]
 }
