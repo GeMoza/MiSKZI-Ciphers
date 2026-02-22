@@ -26,6 +26,9 @@ def _init_playground_state() -> None:
     st.session_state.setdefault("pg_key_form_values", {})
     st.session_state.setdefault("pg_key_mode", t("Form"))
     st.session_state.setdefault("pg_feedback", None)
+    st.session_state.setdefault("pg_loaded_source_type", None)
+    st.session_state.setdefault("pg_loaded_variant_id", None)
+    st.session_state.setdefault("pg_loaded_cipher_id", None)
 
 
 def _fallback_raw_value(param: dict[str, Any]) -> Any:
@@ -86,9 +89,13 @@ def _coerce_widget_value(param: dict[str, Any], raw_value: Any, *, cipher_id: st
     return str(raw_value)
 
 
-def _ensure_widget_state(key: str, value: Any) -> None:
+def _ensure_widget_state(key: str, value: Any, *, force: bool = False) -> None:
     current = st.session_state.get(key)
-    if key not in st.session_state or current != value or type(current) is not type(value):
+    if key not in st.session_state:
+        st.session_state[key] = value
+        return
+
+    if force or type(current) is not type(value):
         st.session_state[key] = value
 
 
@@ -110,7 +117,7 @@ def _sanitize_form_widget_state(cipher_id: str, desc: dict[str, Any]) -> None:
         if not param:
             continue
         coerced = _coerce_widget_value(param, st.session_state.get(state_key), cipher_id=cipher_id, param_name=param_name)
-        _ensure_widget_state(state_key, coerced)
+        _ensure_widget_state(state_key, coerced, force=True)
 
 
 def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
@@ -134,8 +141,8 @@ def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
             label += f" [{t('Optional')}]"
 
         fallback_raw = _fallback_raw_value(p)
-        raw_default = values.get(name, fallback_raw)
         key = f"pg_key.{cipher_id}.{name}"
+        raw_default = st.session_state.get(key, values.get(name, fallback_raw))
         coerced = _coerce_widget_value(p, raw_default, cipher_id=cipher_id, param_name=name)
         _ensure_widget_state(key, coerced)
 
@@ -242,7 +249,7 @@ def _sync_key_form_widgets(cipher_id: str, key_obj: dict[str, Any]) -> None:
         fallback_raw = _fallback_raw_value(p)
         raw_value = key_obj.get(name, fallback_raw)
         coerced = _coerce_widget_value(p, raw_value, cipher_id=cipher_id, param_name=name)
-        _ensure_widget_state(f"pg_key.{cipher_id}.{name}", coerced)
+        _ensure_widget_state(f"pg_key.{cipher_id}.{name}", coerced, force=True)
 
 
 def _set_feedback(level: str, message: str) -> None:
@@ -291,6 +298,9 @@ def _on_load_variant(cipher_id: str, items: list[dict[str, Any]]) -> None:
         key_obj = {}
     st.session_state["pg_key_raw_json"] = json.dumps(key_obj, ensure_ascii=False, indent=2)
     _sync_key_form_widgets(cipher_id, key_obj)
+    st.session_state["pg_loaded_source_type"] = "variant"
+    st.session_state["pg_loaded_variant_id"] = item.get("id") if isinstance(item.get("id"), int) else None
+    st.session_state["pg_loaded_cipher_id"] = cipher_id
 
 
 def _on_load_free_text(cipher_id: str) -> None:
@@ -298,7 +308,20 @@ def _on_load_free_text(cipher_id: str) -> None:
     st.session_state["pg_plaintext"] = free_text
     st.session_state["pg_ciphertext"] = ""
     st.session_state["pg_decrypted"] = ""
+    st.session_state["pg_loaded_source_type"] = "free_text"
+    st.session_state["pg_loaded_variant_id"] = None
+    st.session_state["pg_loaded_cipher_id"] = cipher_id
     _set_feedback("info", f"{t('Loaded free_text')}. {t('Read-only: does not modify saved data')}")
+
+
+def _on_reset_playground() -> None:
+    st.session_state["pg_plaintext"] = ""
+    st.session_state["pg_ciphertext"] = ""
+    st.session_state["pg_decrypted"] = ""
+    st.session_state["pg_loaded_source_type"] = None
+    st.session_state["pg_loaded_variant_id"] = None
+    st.session_state["pg_loaded_cipher_id"] = None
+    _set_feedback("info", "Playground reset")
 
 
 def _on_encrypt(cipher_id: str) -> None:
@@ -415,6 +438,7 @@ def _playground() -> None:
         st.button(t("Decrypt"), on_click=_on_decrypt, args=(cipher_id,))
     with btn3:
         st.button(t("Roundtrip"), on_click=_on_roundtrip, args=(cipher_id,))
+    st.button("Reset playground", on_click=_on_reset_playground)
 
 
 def _data_manager() -> None:
