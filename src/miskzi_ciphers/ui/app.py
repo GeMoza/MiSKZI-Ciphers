@@ -439,14 +439,16 @@ def _data_manager() -> None:
     st.dataframe(items)
 
     options = [f"id={it.get('id')}" for it in items if isinstance(it, dict) and "id" in it]
-    select_mode = st.radio(t("Edit variant"), [t("Edit existing"), t("Add new")], horizontal=True)
+    select_mode = st.radio(t("Edit variant"), [t("Edit existing"), t("Add new")], horizontal=True, key=f"dm.select_mode.{cipher_id}")
 
     current: dict[str, Any] = {"id": 1, "mode": "encrypt", "text": "", "key": {}, "expected": ""}
 
+    selected_id_or_new = "new"
     if select_mode == t("Edit existing"):
         if options:
-            selected = st.selectbox(t("Select variant"), options)
+            selected = st.selectbox(t("Select variant"), options, key=f"dm.select_variant.{cipher_id}")
             selected_id = int(selected.split("=")[1])
+            selected_id_or_new = str(selected_id)
             found = next((x for x in items if isinstance(x, dict) and x.get("id") == selected_id), None)
             if found:
                 current = {
@@ -463,11 +465,31 @@ def _data_manager() -> None:
         next_id = (max(used_ids) + 1) if used_ids else 1
         current["id"] = next_id
 
-    vid = st.number_input("id", min_value=1, value=int(current["id"]), step=1)
-    vmode = st.selectbox("mode", ["encrypt", "decrypt"], index=0 if current["mode"] == "encrypt" else 1)
-    vtext = st.text_area("text", value=current["text"], key="dm_vtext")
-    vkey_raw = st.text_area(t("Key JSON object"), value=json.dumps(current["key"], ensure_ascii=False, indent=2))
-    vexpected = st.text_area(t("Expected optional"), value=current["expected"], key="dm_vexpected")
+    mode_slug = "edit" if select_mode == t("Edit existing") else "add"
+    ctx = f"{cipher_id}.{mode_slug}.{selected_id_or_new}"
+
+    key_id = f"dm.id.{ctx}"
+    key_mode = f"dm.mode.{ctx}"
+    key_text = f"dm.text.{ctx}"
+    key_keyjson = f"dm.key.{ctx}"
+    key_expected = f"dm.expected.{ctx}"
+
+    if key_id not in st.session_state:
+        st.session_state[key_id] = int(current["id"])
+    if key_mode not in st.session_state:
+        st.session_state[key_mode] = str(current["mode"])
+    if key_text not in st.session_state:
+        st.session_state[key_text] = str(current["text"])
+    if key_keyjson not in st.session_state:
+        st.session_state[key_keyjson] = json.dumps(current["key"], ensure_ascii=False, indent=2)
+    if key_expected not in st.session_state:
+        st.session_state[key_expected] = str(current["expected"])
+
+    vid = st.number_input("id", min_value=1, step=1, key=key_id)
+    vmode = st.selectbox("mode", ["encrypt", "decrypt"], key=key_mode)
+    vtext = st.text_area("text", key=key_text)
+    vkey_raw = st.text_area(t("Key JSON object"), key=key_keyjson)
+    vexpected = st.text_area(t("Expected optional"), key=key_expected)
 
     parsed_key: dict[str, Any] | None = None
     try:
@@ -526,6 +548,16 @@ def _data_manager() -> None:
                 service.save_variants(cipher_id, payload)
                 st.success(t("Deleted variant"))
     with c3:
+        if st.button("Reset form", key=f"dm_reset.{ctx}"):
+            st.session_state.pop(key_id, None)
+            st.session_state.pop(key_mode, None)
+            st.session_state.pop(key_text, None)
+            st.session_state.pop(key_keyjson, None)
+            st.session_state.pop(key_expected, None)
+            st.rerun()
+
+    c4, _, _ = st.columns(3)
+    with c4:
         if st.button(t("Run variant"), key="dm_run"):
             if parsed_key is None:
                 st.error(t("Cannot run key JSON object"))
