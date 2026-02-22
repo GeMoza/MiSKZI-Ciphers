@@ -28,32 +28,97 @@ def _init_playground_state() -> None:
     st.session_state.setdefault("pg_feedback", None)
 
 
-def _form_default_value(param: dict[str, Any], current: dict[str, Any]) -> Any:
-    name = str(param.get("name", ""))
-    if name in current:
-        return current[name]
+def _fallback_raw_value(param: dict[str, Any]) -> Any:
     if "default" in param:
         return param["default"]
     if "example" in param:
         return param["example"]
-    return ""
 
-
-def _default_from_describe(param: dict[str, Any]) -> Any:
-    if "default" in param:
-        return param["default"]
-    if "example" in param:
-        return param["example"]
     p_type = str(param.get("type", "str"))
+    options = param.get("options", param.get("choices", [])) or []
+    if p_type == "int":
+        return 0
     if p_type == "bool":
         return False
+    if p_type == "enum" and options:
+        return options[0]
     return ""
+
+
+def _coerce_widget_value(param: dict[str, Any], raw_value: Any, *, cipher_id: str, param_name: str) -> Any:
+    _ = cipher_id
+    _ = param_name
+
+    p_type = str(param.get("type", "str"))
+    if p_type == "int":
+        fallback_raw = param.get("default", 0)
+        try:
+            fallback = int(fallback_raw)
+        except (TypeError, ValueError):
+            fallback = 0
+        if raw_value in (None, ""):
+            return fallback
+        try:
+            return int(raw_value)
+        except (TypeError, ValueError):
+            return fallback
+
+    if p_type == "bool":
+        if raw_value is None:
+            return False
+        return bool(raw_value)
+
+    if p_type == "enum":
+        options = param.get("options", param.get("choices", [])) or []
+        if not isinstance(options, (list, tuple)):
+            options = []
+        if not options:
+            return "" if raw_value is None else str(raw_value)
+        if raw_value in options:
+            return raw_value
+        default = param.get("default")
+        if default in options:
+            return default
+        return options[0]
+
+    if raw_value is None:
+        return ""
+    return str(raw_value)
+
+
+def _ensure_widget_state(key: str, value: Any) -> None:
+    current = st.session_state.get(key)
+    if key not in st.session_state or current != value or type(current) is not type(value):
+        st.session_state[key] = value
+
+
+def _sanitize_form_widget_state(cipher_id: str, desc: dict[str, Any]) -> None:
+    params = desc.get("params", []) if isinstance(desc, dict) else []
+    by_name: dict[str, dict[str, Any]] = {}
+    for p in params or []:
+        if isinstance(p, dict):
+            name = str(p.get("name", "")).strip()
+            if name:
+                by_name[name] = p
+
+    prefix = f"pg_key.{cipher_id}."
+    for state_key in list(st.session_state.keys()):
+        if not state_key.startswith(prefix):
+            continue
+        param_name = state_key[len(prefix) :]
+        param = by_name.get(param_name)
+        if not param:
+            continue
+        coerced = _coerce_widget_value(param, st.session_state.get(state_key), cipher_id=cipher_id, param_name=param_name)
+        _ensure_widget_state(state_key, coerced)
 
 
 def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
     values = st.session_state.get("pg_key_form_values", {})
     if not isinstance(values, dict):
         values = {}
+
+    _sanitize_form_widget_state(cipher_id, desc)
 
     out: dict[str, Any] = {}
     for p in desc.get("params", []) or []:
@@ -68,29 +133,26 @@ def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
         if not required:
             label += f" [{t('Optional')}]"
 
-        default = _form_default_value(p, values)
+        fallback_raw = _fallback_raw_value(p)
+        raw_default = values.get(name, fallback_raw)
         key = f"pg_key.{cipher_id}.{name}"
+        coerced = _coerce_widget_value(p, raw_default, cipher_id=cipher_id, param_name=name)
+        _ensure_widget_state(key, coerced)
 
         if p_type == "int":
-            val = st.text_input(label, value=str(default) if default != "" else "", key=key)
-            if val != "":
-                out[name] = val
+            out[name] = int(st.number_input(label, key=key, step=1))
         elif p_type == "bool":
-            bool_default = bool(default) if default != "" else False
-            out[name] = st.checkbox(label, value=bool_default, key=key)
+            out[name] = bool(st.checkbox(label, key=key))
         elif p_type == "enum":
-            choices = p.get("choices", []) or []
-            if choices:
-                idx = 0
-                if default in choices:
-                    idx = choices.index(default)
-                out[name] = st.selectbox(label, choices, index=idx, key=key)
+            options = p.get("options", p.get("choices", [])) or []
+            if options:
+                out[name] = st.selectbox(label, options, key=key)
             else:
-                val = st.text_input(label, value=str(default), key=key)
+                val = st.text_input(label, key=key)
                 if val != "" or required:
                     out[name] = val
         else:
-            val = st.text_input(label, value=str(default), key=key)
+            val = st.text_input(label, key=key)
             if val != "" or required:
                 out[name] = val
 
@@ -177,8 +239,10 @@ def _sync_key_form_widgets(cipher_id: str, key_obj: dict[str, Any]) -> None:
         name = str(p.get("name", "")).strip()
         if not name:
             continue
-        default = _default_from_describe(p)
-        st.session_state[f"pg_key.{cipher_id}.{name}"] = key_obj.get(name, default)
+        fallback_raw = _fallback_raw_value(p)
+        raw_value = key_obj.get(name, fallback_raw)
+        coerced = _coerce_widget_value(p, raw_value, cipher_id=cipher_id, param_name=name)
+        _ensure_widget_state(f"pg_key.{cipher_id}.{name}", coerced)
 
 
 def _set_feedback(level: str, message: str) -> None:
