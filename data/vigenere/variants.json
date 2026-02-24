@@ -5,7 +5,8 @@
       "mode": "decrypt",
       "text": "цйцрнтл",
       "key": {
-        "keyword": "киб"
+        "keyword": "киб",
+        "one_based": true
       }
     }
   ]
