@@ -59,6 +59,13 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
             },
             "ПРИВЕТМИР",
         ),
+        "gronsfeld": ({"digits": "15215"}, "ПРИВЕТ, МИР!"),
+        "trisemus": ({"keyword": "КЛЮЧ", "cols": 6, "extras": "123"}, "ПРИВЕТ, МИР!"),
+        "bacon": ({"group_len": 6, "separator": " "}, "МИРЭА"),
+        "cardano_grille": (
+            {"size": 6, "rotation": "ccw", "filler": "А", "mask_id": "fig12"},
+            "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВ",
+        ),
     }
 
 
