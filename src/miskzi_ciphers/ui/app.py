@@ -31,6 +31,14 @@ def _init_playground_state() -> None:
     st.session_state.setdefault("pg_loaded_cipher_id", None)
 
 
+def _init_ui_cipher_state(ciphers: list[str]) -> str:
+    if not ciphers:
+        raise ValueError("No ciphers available")
+    if st.session_state.get("ui_cipher_id") not in ciphers:
+        st.session_state["ui_cipher_id"] = ciphers[0]
+    return str(st.session_state["ui_cipher_id"])
+
+
 def _fallback_raw_value(param: dict[str, Any]) -> Any:
     if "default" in param:
         return param["default"]
@@ -371,10 +379,11 @@ def _playground() -> None:
     st.header(t("Playground"))
 
     ciphers = service.list_ciphers()
+    _init_ui_cipher_state(ciphers)
     cipher_id = st.selectbox(
         t("Cipher"),
         ciphers,
-        key="pg_cipher",
+        key="ui_cipher_id",
         format_func=lambda cid: label_cipher(cid),
     )
     desc = service.get_cipher_description(cipher_id)
@@ -445,10 +454,11 @@ def _data_manager() -> None:
     st.header(t("Data Manager"))
 
     ciphers = service.list_ciphers()
+    _init_ui_cipher_state(ciphers)
     cipher_id = st.selectbox(
         t("Cipher"),
         ciphers,
-        key="dm_cipher",
+        key="ui_cipher_id",
         format_func=lambda cid: label_cipher(cid),
     )
 
@@ -496,6 +506,7 @@ def _data_manager() -> None:
     key_mode = f"dm.mode.{ctx}"
     key_text = f"dm.text.{ctx}"
     key_keyjson = f"dm.key.{ctx}"
+    key_keymode = f"dm.key_mode.{ctx}"
     key_expected = f"dm.expected.{ctx}"
 
     if key_id not in st.session_state:
@@ -506,24 +517,75 @@ def _data_manager() -> None:
         st.session_state[key_text] = str(current["text"])
     if key_keyjson not in st.session_state:
         st.session_state[key_keyjson] = json.dumps(current["key"], ensure_ascii=False, indent=2)
+    if key_keymode not in st.session_state:
+        st.session_state[key_keymode] = "Form"
     if key_expected not in st.session_state:
         st.session_state[key_expected] = str(current["expected"])
 
     vid = st.number_input("id", min_value=1, step=1, key=key_id)
     vmode = st.selectbox("mode", ["encrypt", "decrypt"], key=key_mode)
     vtext = st.text_area("text", key=key_text)
-    vkey_raw = st.text_area(t("Key JSON object"), key=key_keyjson)
-    vexpected = st.text_area(t("Expected optional"), key=key_expected)
+    key_input_mode = st.radio("Key input", ["Form", "Raw JSON"], key=key_keymode, horizontal=True)
+    desc = service.get_cipher_description(cipher_id)
 
     parsed_key: dict[str, Any] | None = None
-    try:
-        parsed_key_any = json.loads(vkey_raw) if vkey_raw.strip() else {}
-        if not isinstance(parsed_key_any, dict):
-            st.error(t("key JSON must be object"))
-        else:
-            parsed_key = parsed_key_any
-    except json.JSONDecodeError as e:
-        st.error(f"{t('key JSON error')}: {e}")
+    if key_input_mode == "Raw JSON":
+        vkey_raw = st.text_area(t("Key JSON object"), key=key_keyjson)
+        try:
+            parsed_key_any = json.loads(vkey_raw) if vkey_raw.strip() else {}
+            if not isinstance(parsed_key_any, dict):
+                st.error(t("key JSON must be object"))
+            else:
+                parsed_key = parsed_key_any
+        except json.JSONDecodeError as e:
+            st.error(f"{t('key JSON error')}: {e}")
+    else:
+        params = desc.get("params", []) if isinstance(desc, dict) else []
+        form_raw_key: dict[str, Any] = {}
+        current_key = current["key"] if isinstance(current.get("key"), dict) else {}
+        for p in params or []:
+            if not isinstance(p, dict):
+                continue
+            name = str(p.get("name", "")).strip()
+            if not name:
+                continue
+
+            p_type = str(p.get("type", "str"))
+            required = bool(p.get("required", False))
+            display_name = label_param(cipher_id, name)
+            label = f"{display_name} ({p_type})"
+            if not required:
+                label += f" [{t('Optional')}]"
+
+            fallback_raw = _fallback_raw_value(p)
+            raw_default = current_key.get(name, fallback_raw)
+            state_key = f"dm.key_form.{ctx}.{name}"
+            coerced = _coerce_widget_value(p, raw_default, cipher_id=cipher_id, param_name=name)
+            _ensure_widget_state(state_key, coerced)
+
+            if p_type == "int":
+                value: Any = int(st.number_input(label, key=state_key, step=1))
+            elif p_type == "bool":
+                value = bool(st.checkbox(label, key=state_key))
+            elif p_type == "enum":
+                options = p.get("options", p.get("choices", [])) or []
+                if options:
+                    value = st.selectbox(label, options, key=state_key)
+                else:
+                    value = st.text_input(label, key=state_key)
+            else:
+                value = st.text_input(label, key=state_key)
+
+            if value != "" or required:
+                form_raw_key[name] = _coerce_widget_value(p, value, cipher_id=cipher_id, param_name=name)
+
+        parsed_key = form_raw_key
+        st.code(json.dumps(form_raw_key, ensure_ascii=False, indent=2), language="json")
+
+    if parsed_key is not None:
+        st.session_state[key_keyjson] = json.dumps(parsed_key, ensure_ascii=False, indent=2)
+
+    vexpected = st.text_area(t("Expected optional"), key=key_expected)
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -531,6 +593,12 @@ def _data_manager() -> None:
             if parsed_key is None:
                 st.error(t("Cannot save key JSON object"))
             else:
+                try:
+                    service.parse_key(cipher_id, parsed_key)
+                except Exception as e:
+                    st.error(str(e))
+                    return
+
                 updated = [dict(x) for x in items if isinstance(x, dict)]
                 row: dict[str, Any] = {
                     "id": int(vid),
@@ -577,7 +645,12 @@ def _data_manager() -> None:
             st.session_state.pop(key_mode, None)
             st.session_state.pop(key_text, None)
             st.session_state.pop(key_keyjson, None)
+            st.session_state.pop(key_keymode, None)
             st.session_state.pop(key_expected, None)
+            form_prefix = f"dm.key_form.{ctx}."
+            for state_key in list(st.session_state.keys()):
+                if state_key.startswith(form_prefix):
+                    st.session_state.pop(state_key, None)
             st.rerun()
 
     c4, _, _ = st.columns(3)
