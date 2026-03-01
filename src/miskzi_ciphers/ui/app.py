@@ -189,6 +189,12 @@ def _parse_raw_json(raw_text: str) -> dict[str, Any] | None:
     return loaded
 
 
+
+
+def _pretty_json(obj: dict[str, Any]) -> str:
+    return json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=True)
+
+
 def _show_description(cipher_id: str) -> None:
     desc = service.get_cipher_description(cipher_id)
     override = description_override(cipher_id)
@@ -505,9 +511,13 @@ def _data_manager() -> None:
     key_id = f"dm.id.{ctx}"
     key_mode = f"dm.mode.{ctx}"
     key_text = f"dm.text.{ctx}"
-    key_keyjson = f"dm.key.{ctx}"
+    key_keyobj = f"dm.key_obj.{ctx}"
+    key_keyjson = f"dm.key_json_text.{ctx}"
     key_keymode = f"dm.key_mode.{ctx}"
     key_expected = f"dm.expected.{ctx}"
+    key_error = f"dm.error.{ctx}"
+
+    raw_key = current["key"] if isinstance(current.get("key"), dict) else {}
 
     if key_id not in st.session_state:
         st.session_state[key_id] = int(current["id"])
@@ -515,12 +525,40 @@ def _data_manager() -> None:
         st.session_state[key_mode] = str(current["mode"])
     if key_text not in st.session_state:
         st.session_state[key_text] = str(current["text"])
+    if key_keyobj not in st.session_state:
+        st.session_state[key_keyobj] = json.loads(json.dumps(raw_key, ensure_ascii=False))
     if key_keyjson not in st.session_state:
-        st.session_state[key_keyjson] = json.dumps(current["key"], ensure_ascii=False, indent=2)
+        st.session_state[key_keyjson] = _pretty_json(raw_key)
     if key_keymode not in st.session_state:
         st.session_state[key_keymode] = "Form"
     if key_expected not in st.session_state:
         st.session_state[key_expected] = str(current["expected"])
+
+    if msg := st.session_state.get(key_error):
+        st.error(str(msg))
+        st.session_state.pop(key_error, None)
+
+    def _sync_to_raw_json() -> None:
+        key_obj = st.session_state.get(key_keyobj, {})
+        if not isinstance(key_obj, dict):
+            key_obj = {}
+        st.session_state[key_keyjson] = _pretty_json(key_obj)
+
+    def _apply_raw_json_to_form() -> None:
+        try:
+            parsed = json.loads(str(st.session_state.get(key_keyjson, "")) or "{}")
+        except json.JSONDecodeError as e:
+            st.session_state[key_error] = f"{t('key JSON error')}: {e}"
+            return
+        if not isinstance(parsed, dict):
+            st.session_state[key_error] = t("key JSON must be object")
+            return
+        try:
+            service.parse_key(cipher_id, parsed)
+        except Exception as e:
+            st.session_state[key_error] = str(e)
+            return
+        st.session_state[key_keyobj] = parsed
 
     vid = st.number_input("id", min_value=1, step=1, key=key_id)
     vmode = st.selectbox("mode", ["encrypt", "decrypt"], key=key_mode)
@@ -528,21 +566,16 @@ def _data_manager() -> None:
     key_input_mode = st.radio("Key input", ["Form", "Raw JSON"], key=key_keymode, horizontal=True)
     desc = service.get_cipher_description(cipher_id)
 
-    parsed_key: dict[str, Any] | None = None
     if key_input_mode == "Raw JSON":
-        vkey_raw = st.text_area(t("Key JSON object"), key=key_keyjson)
-        try:
-            parsed_key_any = json.loads(vkey_raw) if vkey_raw.strip() else {}
-            if not isinstance(parsed_key_any, dict):
-                st.error(t("key JSON must be object"))
-            else:
-                parsed_key = parsed_key_any
-        except json.JSONDecodeError as e:
-            st.error(f"{t('key JSON error')}: {e}")
+        st.text_area(t("Key JSON object"), key=key_keyjson)
+        st.button("Apply JSON to Form", key=f"dm.apply_raw.{ctx}", on_click=_apply_raw_json_to_form)
     else:
         params = desc.get("params", []) if isinstance(desc, dict) else []
+        current_key = st.session_state.get(key_keyobj, {})
+        if not isinstance(current_key, dict):
+            current_key = {}
+
         form_raw_key: dict[str, Any] = {}
-        current_key = current["key"] if isinstance(current.get("key"), dict) else {}
         for p in params or []:
             if not isinstance(p, dict):
                 continue
@@ -579,54 +612,71 @@ def _data_manager() -> None:
             if value != "" or required:
                 form_raw_key[name] = _coerce_widget_value(p, value, cipher_id=cipher_id, param_name=name)
 
-        parsed_key = form_raw_key
-        st.code(json.dumps(form_raw_key, ensure_ascii=False, indent=2), language="json")
-
-    if parsed_key is not None:
-        st.session_state[key_keyjson] = json.dumps(parsed_key, ensure_ascii=False, indent=2)
+        st.session_state[key_keyobj] = dict(form_raw_key)
+        st.code(_pretty_json(st.session_state[key_keyobj]), language="json")
+        st.button("Sync to Raw JSON", key=f"dm.sync_to_raw.{ctx}", on_click=_sync_to_raw_json)
 
     vexpected = st.text_area(t("Expected optional"), key=key_expected)
 
     c1, c2, c3 = st.columns(3)
     with c1:
         if st.button(t("Save"), key="dm_save"):
-            if parsed_key is None:
+            save_key_obj = st.session_state.get(key_keyobj, {})
+            if not isinstance(save_key_obj, dict):
                 st.error(t("Cannot save key JSON object"))
+                return
+
+            if key_input_mode == "Raw JSON":
+                try:
+                    parsed = json.loads(str(st.session_state.get(key_keyjson, "")) or "{}")
+                except json.JSONDecodeError as e:
+                    st.error(f"{t('key JSON error')}: {e}")
+                    return
+                if not isinstance(parsed, dict):
+                    st.error(t("key JSON must be object"))
+                    return
+                try:
+                    service.parse_key(cipher_id, parsed)
+                except Exception as e:
+                    st.error(str(e))
+                    return
+                st.session_state[key_keyobj] = parsed
+                save_key_obj = parsed
             else:
                 try:
-                    service.parse_key(cipher_id, parsed_key)
+                    service.parse_key(cipher_id, save_key_obj)
                 except Exception as e:
                     st.error(str(e))
                     return
 
-                updated = [dict(x) for x in items if isinstance(x, dict)]
-                row: dict[str, Any] = {
-                    "id": int(vid),
-                    "mode": vmode,
-                    "text": vtext,
-                    "key": parsed_key,
-                }
-                if vexpected.strip():
-                    row["expected"] = vexpected
+            updated = [dict(x) for x in items if isinstance(x, dict)]
+            row: dict[str, Any] = {
+                "id": int(vid),
+                "mode": vmode,
+                "text": vtext,
+                "key": save_key_obj,
+            }
+            if vexpected.strip():
+                row["expected"] = vexpected
 
-                replaced = False
-                for idx, it in enumerate(updated):
-                    if it.get("id") == int(vid):
-                        updated[idx] = row
-                        replaced = True
-                        break
-                if not replaced:
-                    updated.append(row)
+            replaced = False
+            for idx, it in enumerate(updated):
+                if it.get("id") == int(vid):
+                    updated[idx] = row
+                    replaced = True
+                    break
+            if not replaced:
+                updated.append(row)
 
-                payload = {"items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
-                errors = service.validate_variants_obj(payload)
-                if errors:
-                    st.error(t("Validation errors"))
-                    for err in errors:
-                        st.error(err)
-                else:
-                    service.save_variants(cipher_id, payload)
-                    st.success(t("Saved variants"))
+            payload = {"items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
+            errors = service.validate_variants_obj(payload)
+            if errors:
+                st.error(t("Validation errors"))
+                for err in errors:
+                    st.error(err)
+            else:
+                service.save_variants(cipher_id, payload)
+                st.success(t("Saved variants"))
     with c2:
         if st.button(t("Delete"), key="dm_delete"):
             updated = [dict(x) for x in items if isinstance(x, dict) and x.get("id") != int(vid)]
@@ -644,9 +694,11 @@ def _data_manager() -> None:
             st.session_state.pop(key_id, None)
             st.session_state.pop(key_mode, None)
             st.session_state.pop(key_text, None)
+            st.session_state.pop(key_keyobj, None)
             st.session_state.pop(key_keyjson, None)
             st.session_state.pop(key_keymode, None)
             st.session_state.pop(key_expected, None)
+            st.session_state.pop(key_error, None)
             form_prefix = f"dm.key_form.{ctx}."
             for state_key in list(st.session_state.keys()):
                 if state_key.startswith(form_prefix):
@@ -656,14 +708,38 @@ def _data_manager() -> None:
     c4, _, _ = st.columns(3)
     with c4:
         if st.button(t("Run variant"), key="dm_run"):
-            if parsed_key is None:
+            run_key_obj = st.session_state.get(key_keyobj, {})
+            if not isinstance(run_key_obj, dict):
                 st.error(t("Cannot run key JSON object"))
             else:
+                if key_input_mode == "Raw JSON":
+                    try:
+                        parsed = json.loads(str(st.session_state.get(key_keyjson, "")) or "{}")
+                    except json.JSONDecodeError as e:
+                        st.error(f"{t('key JSON error')}: {e}")
+                        return
+                    if not isinstance(parsed, dict):
+                        st.error(t("key JSON must be object"))
+                        return
+                    try:
+                        service.parse_key(cipher_id, parsed)
+                    except Exception as e:
+                        st.error(str(e))
+                        return
+                    st.session_state[key_keyobj] = parsed
+                    run_key_obj = parsed
+                else:
+                    try:
+                        service.parse_key(cipher_id, run_key_obj)
+                    except Exception as e:
+                        st.error(str(e))
+                        return
+
                 try:
                     if vmode == "encrypt":
-                        result = service.encrypt(cipher_id, vtext, parsed_key)
+                        result = service.encrypt(cipher_id, vtext, run_key_obj)
                     else:
-                        result = service.decrypt(cipher_id, vtext, parsed_key)
+                        result = service.decrypt(cipher_id, vtext, run_key_obj)
                     st.write(t("Result"))
                     st.code(result)
                     if vexpected.strip():
