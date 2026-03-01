@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "id": 5,
+      "mode": "decrypt",
+      "text": "тляеарбупчляичхекшапеокпегресторсчсь",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    }
+  ]
+}
