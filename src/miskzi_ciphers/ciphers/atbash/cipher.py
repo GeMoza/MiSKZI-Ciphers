@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from miskzi_ciphers.common.alphabet import RU_33
 from miskzi_ciphers.common.keyparse import reject_unknown_keys
 from miskzi_ciphers.common.types import CipherInfo, Key
 
 
-RUS_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+RUS_UPPER = RU_33
 RUS_LOWER = RUS_UPPER.lower()
 
 MAP_UPPER = {a: b for a, b in zip(RUS_UPPER, reversed(RUS_UPPER))}

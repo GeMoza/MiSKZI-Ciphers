@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "miskzi-ciphers"
-version = "0.7.6"
+version = "0.8.1"
 description = "Educational toolkit of classical ciphers for MiSKZI practice"
 readme = "README.md"
 requires-python = ">=3.11,<4.0"

@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from miskzi_ciphers.common.alphabet import RU_33
 from miskzi_ciphers.common.keyparse import reject_unknown_keys, require, optional, as_str, as_bool
 from miskzi_ciphers.common.types import CipherInfo, Key
 
 
 _COORD_RE = re.compile(r"(\d+)\s*/\s*(\d+)")
 
-RUS = set("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ")
+RUS = set(RU_33)
 
 def is_rus_letter(ch: str) -> bool:
     return ch.upper() in RUS

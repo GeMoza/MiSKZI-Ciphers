@@ -12,7 +12,16 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from miskzi_ciphers.app import service
-from miskzi_ciphers.ui.i18n import description_override, get_lang, label_cipher, label_param, t
+from miskzi_ciphers.ui.i18n import (
+    description_override,
+    get_lang,
+    label_cipher,
+    label_family,
+    label_param,
+    label_param_help,
+    label_param_value,
+    t,
+)
 
 
 st.set_page_config(page_title="MiSKZI Ciphers UI", layout="wide")
@@ -147,6 +156,7 @@ def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
         label = f"{display_name} ({p_type})"
         if not required:
             label += f" [{t('Optional')}]"
+        help_text = _param_help_text(cipher_id, p)
 
         fallback_raw = _fallback_raw_value(p)
         key = f"pg_key.{cipher_id}.{name}"
@@ -155,19 +165,25 @@ def _build_form_key(cipher_id: str, desc: dict[str, Any]) -> dict[str, Any]:
         _ensure_widget_state(key, coerced)
 
         if p_type == "int":
-            out[name] = int(st.number_input(label, key=key, step=1))
+            out[name] = int(st.number_input(label, key=key, step=1, help=help_text))
         elif p_type == "bool":
-            out[name] = bool(st.checkbox(label, key=key))
+            out[name] = bool(st.checkbox(label, key=key, help=help_text))
         elif p_type == "enum":
             options = p.get("options", p.get("choices", [])) or []
             if options:
-                out[name] = st.selectbox(label, options, key=key)
+                out[name] = st.selectbox(
+                    label,
+                    options,
+                    key=key,
+                    help=help_text,
+                    format_func=lambda value, cid=cipher_id, pn=name: label_param_value(cid, pn, value),
+                )
             else:
-                val = st.text_input(label, key=key)
+                val = st.text_input(label, key=key, help=help_text)
                 if val != "" or required:
                     out[name] = val
         else:
-            val = st.text_input(label, key=key)
+            val = st.text_input(label, key=key, help=help_text)
             if val != "" or required:
                 out[name] = val
 
@@ -195,6 +211,23 @@ def _pretty_json(obj: dict[str, Any]) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+def _param_help_text(cipher_id: str, param: dict[str, Any]) -> str | None:
+    name = str(param.get("name", "")).strip()
+    if not name:
+        return None
+    raw_help = str(param.get("help", "")).strip()
+    fallback_help = raw_help if raw_help else None
+    return label_param_help(cipher_id, name, fallback_help)
+
+
+def _variant_mode_label(mode: str) -> str:
+    if mode == "encrypt":
+        return t("Encrypt mode")
+    if mode == "decrypt":
+        return t("Decrypt mode")
+    return mode
+
+
 def _show_description(cipher_id: str) -> None:
     desc = service.get_cipher_description(cipher_id)
     override = description_override(cipher_id)
@@ -202,6 +235,9 @@ def _show_description(cipher_id: str) -> None:
         st.write(override)
 
     st.subheader(t("Technical description"))
+    st.write(f"**{t('Cipher name')}:** {label_cipher(cipher_id)}")
+    st.write(f"**{t('Family')}:** {label_family(str(desc.get('family', '')))}")
+    st.write(f"**{t('Notes')}:**")
     st.write(desc.get("notes", ""))
 
     params = desc.get("params", []) or []
@@ -210,9 +246,16 @@ def _show_description(cipher_id: str) -> None:
         for p in params:
             if not isinstance(p, dict):
                 continue
-            item = dict(p)
-            param_name = str(item.get("name", ""))
-            item[t("Parameter")] = label_param(cipher_id, param_name)
+            param_name = str(p.get("name", ""))
+            item: dict[str, Any] = {
+                t("Parameter"): label_param(cipher_id, param_name),
+                t("Raw key"): param_name,
+                t("Type"): str(p.get("type", "")),
+                t("Required"): t("Yes") if bool(p.get("required", False)) else t("No"),
+                t("Default"): p.get("default", ""),
+                t("Help"): _param_help_text(cipher_id, p) or "",
+                t("Example"): p.get("example", ""),
+            }
             prepared.append(item)
         st.table(prepared)
     else:
@@ -335,7 +378,7 @@ def _on_reset_playground() -> None:
     st.session_state["pg_loaded_source_type"] = None
     st.session_state["pg_loaded_variant_id"] = None
     st.session_state["pg_loaded_cipher_id"] = None
-    _set_feedback("info", "Playground reset")
+    _set_feedback("info", t("Playground reset"))
 
 
 def _on_encrypt(cipher_id: str) -> None:
@@ -453,7 +496,7 @@ def _playground() -> None:
         st.button(t("Decrypt"), on_click=_on_decrypt, args=(cipher_id,))
     with btn3:
         st.button(t("Roundtrip"), on_click=_on_roundtrip, args=(cipher_id,))
-    st.button("Reset playground", on_click=_on_reset_playground)
+    st.button(t("Reset playground"), on_click=_on_reset_playground)
 
 
 def _data_manager() -> None:
@@ -469,8 +512,8 @@ def _data_manager() -> None:
     )
 
     cipher_dir = service.data_dir() / cipher_id
-    st.write(f"data_dir: {service.data_dir()}")
-    st.write(f"cipher_dir: {cipher_dir}")
+    st.write(f"{t('Data directory')}: {service.data_dir()}")
+    st.write(f"{t('Cipher directory')}: {cipher_dir}")
 
     st.subheader(t("Variants"))
     variants_obj = service.load_variants(cipher_id)
@@ -530,7 +573,7 @@ def _data_manager() -> None:
     if key_keyjson not in st.session_state:
         st.session_state[key_keyjson] = _pretty_json(raw_key)
     if key_keymode not in st.session_state:
-        st.session_state[key_keymode] = "Form"
+        st.session_state[key_keymode] = t("Form")
     if key_expected not in st.session_state:
         st.session_state[key_expected] = str(current["expected"])
 
@@ -560,15 +603,18 @@ def _data_manager() -> None:
             return
         st.session_state[key_keyobj] = parsed
 
-    vid = st.number_input("id", min_value=1, step=1, key=key_id)
-    vmode = st.selectbox("mode", ["encrypt", "decrypt"], key=key_mode)
-    vtext = st.text_area("text", key=key_text)
-    key_input_mode = st.radio("Key input", ["Form", "Raw JSON"], key=key_keymode, horizontal=True)
+    vid = st.number_input(t("Identifier"), min_value=1, step=1, key=key_id)
+    vmode = st.selectbox(t("Mode"), ["encrypt", "decrypt"], key=key_mode, format_func=_variant_mode_label)
+    vtext = st.text_area(t("Text"), key=key_text)
+    key_modes = [t("Form"), t("Raw JSON")]
+    current_mode = st.session_state.get(key_keymode, t("Form"))
+    mode_index = key_modes.index(current_mode) if current_mode in key_modes else 0
+    key_input_mode = st.radio(t("Key input"), key_modes, index=mode_index, key=key_keymode, horizontal=True)
     desc = service.get_cipher_description(cipher_id)
 
-    if key_input_mode == "Raw JSON":
+    if key_input_mode == t("Raw JSON"):
         st.text_area(t("Key JSON object"), key=key_keyjson)
-        st.button("Apply JSON to Form", key=f"dm.apply_raw.{ctx}", on_click=_apply_raw_json_to_form)
+        st.button(t("Apply JSON to Form"), key=f"dm.apply_raw.{ctx}", on_click=_apply_raw_json_to_form)
     else:
         params = desc.get("params", []) if isinstance(desc, dict) else []
         current_key = st.session_state.get(key_keyobj, {})
@@ -589,6 +635,7 @@ def _data_manager() -> None:
             label = f"{display_name} ({p_type})"
             if not required:
                 label += f" [{t('Optional')}]"
+            help_text = _param_help_text(cipher_id, p)
 
             fallback_raw = _fallback_raw_value(p)
             raw_default = current_key.get(name, fallback_raw)
@@ -597,24 +644,24 @@ def _data_manager() -> None:
             _ensure_widget_state(state_key, coerced)
 
             if p_type == "int":
-                value: Any = int(st.number_input(label, key=state_key, step=1))
+                value: Any = int(st.number_input(label, key=state_key, step=1, help=help_text))
             elif p_type == "bool":
-                value = bool(st.checkbox(label, key=state_key))
+                value = bool(st.checkbox(label, key=state_key, help=help_text))
             elif p_type == "enum":
                 options = p.get("options", p.get("choices", [])) or []
                 if options:
-                    value = st.selectbox(label, options, key=state_key)
+                    value = st.selectbox(label, options, key=state_key, help=help_text, format_func=lambda v, cid=cipher_id, pn=name: label_param_value(cid, pn, v))
                 else:
-                    value = st.text_input(label, key=state_key)
+                    value = st.text_input(label, key=state_key, help=help_text)
             else:
-                value = st.text_input(label, key=state_key)
+                value = st.text_input(label, key=state_key, help=help_text)
 
             if value != "" or required:
                 form_raw_key[name] = _coerce_widget_value(p, value, cipher_id=cipher_id, param_name=name)
 
         st.session_state[key_keyobj] = dict(form_raw_key)
         st.code(_pretty_json(st.session_state[key_keyobj]), language="json")
-        st.button("Sync to Raw JSON", key=f"dm.sync_to_raw.{ctx}", on_click=_sync_to_raw_json)
+        st.button(t("Sync to Raw JSON"), key=f"dm.sync_to_raw.{ctx}", on_click=_sync_to_raw_json)
 
     vexpected = st.text_area(t("Expected optional"), key=key_expected)
 
@@ -626,7 +673,7 @@ def _data_manager() -> None:
                 st.error(t("Cannot save key JSON object"))
                 return
 
-            if key_input_mode == "Raw JSON":
+            if key_input_mode == t("Raw JSON"):
                 try:
                     parsed = json.loads(str(st.session_state.get(key_keyjson, "")) or "{}")
                 except json.JSONDecodeError as e:
@@ -690,7 +737,7 @@ def _data_manager() -> None:
                 service.save_variants(cipher_id, payload)
                 st.success(t("Deleted variant"))
     with c3:
-        if st.button("Reset form", key=f"dm_reset.{ctx}"):
+        if st.button(t("Reset form"), key=f"dm_reset.{ctx}"):
             st.session_state.pop(key_id, None)
             st.session_state.pop(key_mode, None)
             st.session_state.pop(key_text, None)
@@ -712,7 +759,7 @@ def _data_manager() -> None:
             if not isinstance(run_key_obj, dict):
                 st.error(t("Cannot run key JSON object"))
             else:
-                if key_input_mode == "Raw JSON":
+                if key_input_mode == t("Raw JSON"):
                     try:
                         parsed = json.loads(str(st.session_state.get(key_keyjson, "")) or "{}")
                     except json.JSONDecodeError as e:
