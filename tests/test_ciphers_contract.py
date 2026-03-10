@@ -43,8 +43,8 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         "magic_square": ({}, "АБВГДЕЁЖЗИЙКЛМНО"),
         "book_cipher": ({"key_path": str(key_path)}, "ПРИВЕТМИР"),
         "affine": ({"a": 5, "b": 3}, "ПРИВЕТ, МИР!"),
-        "binary_code": ({}, "МИРЭА"),
-        "litorea": ({}, "МИРЭА"),
+        "binary_code": ({}, "ТЕСТ"),
+        "litorea": ({}, "ТЕСТ"),
         "vigenere": ({"keyword": "ГДЕ ОН"}, "ПРИВЕТ, МИР!"),
         "alberti": (
             {
@@ -61,7 +61,7 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         ),
         "gronsfeld": ({"digits": "15215"}, "ПРИВЕТ, МИР!"),
         "trisemus": ({"keyword": "КЛЮЧ", "cols": 6, "extras": "123"}, "ПРИВЕТ, МИР!"),
-        "bacon": ({"group_len": 6, "separator": " "}, "МИРЭА"),
+        "bacon": ({"group_len": 6, "separator": " "}, "ТЕСТ"),
         "cardano_grille": (
             {"size": 6, "rotation": "ccw", "filler": "А", "mask_id": "fig12"},
             "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВ",

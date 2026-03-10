@@ -1,8 +1,10 @@
 {
   "meta": {
-    "free_text": "",
+    "free_text": "HELLO123",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "keyword": "KEY"
+    }
   },
   "items": [
     {

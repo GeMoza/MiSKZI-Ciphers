@@ -1,8 +1,10 @@
 {
   "meta": {
-    "free_text": "",
+    "free_text": "УНИВЕРСИТЕТ",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "key": "(321)(4213)(1423)"
+    }
   },
   "items": [
     {

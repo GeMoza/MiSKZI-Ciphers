@@ -1,8 +1,10 @@
 {
   "meta": {
-    "free_text": "РТУ_МИРЭА_ИИИ2026!",
+    "free_text": "УНИВЕРСИТЕТ",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "r": 3
+    }
   },
   "items": [
     {

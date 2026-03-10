@@ -1,8 +1,11 @@
 {
   "meta": {
-    "free_text": "МИРЭА",
+    "free_text": "УНИВЕРСИТЕТ",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "key_text": "УНИВЕРСИТЕТ\nПРИМЕРТЕКСТА",
+      "e_instead_of_ee": true
+    }
   },
   "items": [
     {

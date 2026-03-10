@@ -1,8 +1,13 @@
 {
   "meta": {
-    "free_text": "РТУМИРЭА !",
+    "free_text": "СЕКРЕТНОЕСООБЩЕНИЕ",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "size": 6,
+      "rotation": "ccw",
+      "filler": "А",
+      "mask_id": "fig12"
+    }
   },
   "items": [
     {

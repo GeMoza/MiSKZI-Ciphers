@@ -1,8 +1,12 @@
 {
   "meta": {
-    "free_text": "РТУ МИРЭА",
+    "free_text": "УНИВЕРСИТЕТ",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "keyword": "КЛЮЧ",
+      "cols": 6,
+      "extras": "123"
+    }
   },
   "items": [
     {

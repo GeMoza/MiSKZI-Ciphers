@@ -1,8 +1,11 @@
 {
   "meta": {
-    "free_text": "",
+    "free_text": "ТЕСТ",
     "notes": "",
-    "raw_key_example": {}
+    "raw_key_example": {
+      "keyword": "....",
+      "apply_to": "all"
+    }
   },
   "items": [
     {
