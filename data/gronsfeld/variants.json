@@ -1,11 +1,83 @@
 {
   "items": [
     {
+      "id": 1,
+      "mode": "decrypt",
+      "text": "РХЖЦОЕЕДЖТЁРЮ",
+      "key": {
+        "digits": "15270"
+      }
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "НЦЙПЧСИСАЩЛЕ",
+      "key": {
+        "digits": "36105"
+      }
+    },
+    {
+      "id": 3,
+      "mode": "decrypt",
+      "text": "ЙУУОЧЫЗРЭЗ",
+      "key": {
+        "digits": "73514"
+      }
+    },
+    {
+      "id": 4,
+      "mode": "decrypt",
+      "text": "ЧФЫЕНУФ",
+      "key": {
+        "digits": "62819"
+      }
+    },
+    {
       "id": 5,
       "mode": "decrypt",
       "text": "ЫСШТПХНОУУ",
       "key": {
         "digits": "39421"
+      }
+    },
+    {
+      "id": 6,
+      "mode": "decrypt",
+      "text": "ДФЛКЩТСРБ",
+      "key": {
+        "digits": "41827"
+      }
+    },
+    {
+      "id": 7,
+      "mode": "decrypt",
+      "text": "ОЁЦЁМФЁ",
+      "key": {
+        "digits": "46218"
+      }
+    },
+    {
+      "id": 8,
+      "mode": "decrypt",
+      "text": "ГУЗФЩЛЪС",
+      "key": {
+        "digits": "38569"
+      }
+    },
+    {
+      "id": 9,
+      "mode": "decrypt",
+      "text": "ЯКЧСУИВРЙЙ",
+      "key": {
+        "digits": "72315"
+      }
+    },
+    {
+      "id": 10,
+      "mode": "decrypt",
+      "text": "ЦСХВЩЙРПЁ",
+      "key": {
+        "digits": "53710"
       }
     }
   ]

@@ -1,9 +1,9 @@
 {
   "items": [
     {
-      "id": 5,
+      "id": 1,
       "mode": "decrypt",
-      "text": "Ц Ц Э Ц Ю Э К Б П Ю Ц",
+      "text": "ц ы е б и ч в д к и",
       "key": {
         "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
         "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
@@ -13,6 +13,141 @@
         "shift_dir": "left",
         "emit_prefix": true,
         "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "ц б я ы т ы р ы е",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 3,
+      "mode": "decrypt",
+      "text": "ц а о ц о л б к ж ю",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 4,
+      "mode": "decrypt",
+      "text": "ц ё о м э г ж к з г",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 5,
+      "mode": "decrypt",
+      "text": "ц ц э ц ю э к б п ю",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 6,
+      "mode": "decrypt",
+      "text": "ц ц э ц ю э к б п ю",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 7,
+      "mode": "decrypt",
+      "text": "ц б б л ц ю т е к г",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ц"
+      }
+    },
+    {
+      "id": 8,
+      "mode": "decrypt",
+      "text": "ж к з м к м л ц щ",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ж"
+      }
+    },
+    {
+      "id": 9,
+      "mode": "decrypt",
+      "text": "ю к й й и б ц б",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ю"
+      }
+    },
+    {
+      "id": 10,
+      "mode": "decrypt",
+      "text": "ю л к ю к щ е з",
+      "key": {
+        "outer": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+        "inner": "ОЦЫЖМЩПДАЭЕВЮЗЙГКЁЛЧБИЯЬТНРХУСШЪФ",
+        "index_char": "Ь",
+        "shift_every": 5,
+        "shift_step": 1,
+        "shift_dir": "left",
+        "emit_prefix": true,
+        "start_outer": "Ю"
       }
     }
   ]

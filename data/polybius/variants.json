@@ -1,9 +1,81 @@
 {
   "items": [
     {
+      "id": 1,
+      "mode": "decrypt",
+      "text": "БЧЪСЩАВЯЕЭГЛ",
+      "key": {
+        "method": 2
+      }
+    },
+    {
+      "id": 2,
+      "mode": "encrypt",
+      "text": "ФИШИНГ",
+      "key": {
+        "method": 3
+      }
+    },
+    {
+      "id": 3,
+      "mode": "decrypt",
+      "text": "ЭКШ,ЦКГЦЁНЁГФШТКЦ.ГФЙОУГЦЁНГФШЦКМ.",
+      "key": {
+        "method": 1
+      }
+    },
+    {
+      "id": 4,
+      "mode": "encrypt",
+      "text": "КРИПТОГРАФИЯ",
+      "key": {
+        "method": 2
+      }
+    },
+    {
       "id": 5,
       "mode": "decrypt",
       "text": "ОЮРУГЯ",
+      "key": {
+        "method": 3
+      }
+    },
+    {
+      "id": 6,
+      "mode": "encrypt",
+      "text": "БАНКНОТА",
+      "key": {
+        "method": 3
+      }
+    },
+    {
+      "id": 7,
+      "mode": "decrypt",
+      "text": "ЁЦЖЩН",
+      "key": {
+        "method": 1
+      }
+    },
+    {
+      "id": 8,
+      "mode": "decrypt",
+      "text": "Х,СКЧФЧ",
+      "key": {
+        "method": 1
+      }
+    },
+    {
+      "id": 9,
+      "mode": "encrypt",
+      "text": "ПЫЛЕСОС",
+      "key": {
+        "method": 2
+      }
+    },
+    {
+      "id": 10,
+      "mode": "decrypt",
+      "text": "ГЯЦНУА",
       "key": {
         "method": 3
       }

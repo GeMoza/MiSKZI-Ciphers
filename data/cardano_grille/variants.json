@@ -1,9 +1,108 @@
 {
   "items": [
     {
+      "id": 1,
+      "mode": "decrypt",
+      "text": "цкоотхусрвчсиллодчосеяседтщйенанавгь",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "ыдуонтпевчяянеаомлояьпнеоосбраскхщшк",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 3,
+      "mode": "decrypt",
+      "text": "щкваыцзмккрпкяенеадкваыкрсмутнтасчсн",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 4,
+      "mode": "decrypt",
+      "text": "нвлсишчъеоьпгйрршдеуцсефтсптнетаубве",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
       "id": 5,
       "mode": "decrypt",
       "text": "тляеарбупчляичхекшапеокпегресторсчсь",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 6,
+      "mode": "decrypt",
+      "text": "кбьуаппарететлияьсозвненутлатрабсхсн",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 7,
+      "mode": "decrypt",
+      "text": "езквзщсцеабъюетзздсныосшчвбсьюерймич",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 8,
+      "mode": "decrypt",
+      "text": "овоельтасбрцнаонжапввдртееорнимячеря",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 9,
+      "mode": "decrypt",
+      "text": "Алпеобритеьлчуаот-отпловерфтниавйищй",
+      "key": {
+        "size": 6,
+        "rotation": "ccw",
+        "filler": "X",
+        "mask_id": "fig12"
+      }
+    },
+    {
+      "id": 10,
+      "mode": "decrypt",
+      "text": "Аоясбуцзеражоумнтьба-нвртревикемэпки",
       "key": {
         "size": 6,
         "rotation": "ccw",

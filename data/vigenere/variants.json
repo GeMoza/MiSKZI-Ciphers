@@ -1,11 +1,92 @@
 {
   "items": [
     {
+      "id": 1,
+      "mode": "decrypt",
+      "text": "рогыыт",
+      "key": {
+        "keyword": "Лето",
+        "one_based": true
+      }
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "мэнойфа",
+      "key": {
+        "keyword": "осень",
+        "one_based": true
+      }
+    },
+    {
+      "id": 3,
+      "mode": "decrypt",
+      "text": "лудбйхще",
+      "key": {
+        "keyword": "весна",
+        "one_based": true
+      }
+    },
+    {
+      "id": 4,
+      "mode": "decrypt",
+      "text": "ушърезаёщ",
+      "key": {
+        "keyword": "зима",
+        "one_based": true
+      }
+    },
+    {
       "id": 5,
       "mode": "decrypt",
       "text": "цйцрнтл",
       "key": {
         "keyword": "киб",
+        "one_based": true
+      }
+    },
+    {
+      "id": 6,
+      "mode": "decrypt",
+      "text": "псоянёбрхё",
+      "key": {
+        "keyword": "день",
+        "one_based": true
+      }
+    },
+    {
+      "id": 7,
+      "mode": "decrypt",
+      "text": "фгщржъш",
+      "key": {
+        "keyword": "жук",
+        "one_based": true
+      }
+    },
+    {
+      "id": 8,
+      "mode": "decrypt",
+      "text": "бфдвгюёён",
+      "key": {
+        "keyword": "ночь",
+        "one_based": true
+      }
+    },
+    {
+      "id": 9,
+      "mode": "decrypt",
+      "text": "вёгтща",
+      "key": {
+        "keyword": "пара",
+        "one_based": true
+      }
+    },
+    {
+      "id": 10,
+      "mode": "decrypt",
+      "text": "яомбтйл",
+      "key": {
+        "keyword": "мышь",
         "one_based": true
       }
     }
