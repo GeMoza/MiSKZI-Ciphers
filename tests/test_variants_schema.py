@@ -22,6 +22,16 @@ def test_variants_json_schema_and_ids_unique() -> None:
         assert "items" in raw, f"{vf}: missing 'items'"
         assert isinstance(raw["items"], list), f"{vf}: 'items' must be list"
 
+        if "meta" in raw:
+            assert isinstance(raw["meta"], dict), f"{vf}: 'meta' must be dict"
+            meta = raw["meta"]
+            if "free_text" in meta:
+                assert isinstance(meta["free_text"], str), f"{vf}: meta.free_text must be str"
+            if "notes" in meta:
+                assert isinstance(meta["notes"], str), f"{vf}: meta.notes must be str"
+            if "raw_key_example" in meta:
+                assert isinstance(meta["raw_key_example"], dict), f"{vf}: meta.raw_key_example must be dict"
+
         ids: set[int] = set()
         for i, item in enumerate(raw["items"]):
             assert isinstance(item, dict), f"{vf}: items[{i}] must be object"

@@ -360,15 +360,31 @@ def _on_load_variant(cipher_id: str, items: list[dict[str, Any]]) -> None:
     st.session_state["pg_loaded_cipher_id"] = cipher_id
 
 
+def _load_key_example_into_playground(cipher_id: str, key_obj: dict[str, Any]) -> None:
+    st.session_state["pg_key_form_values"] = dict(key_obj)
+    st.session_state["pg_key_raw_json"] = json.dumps(key_obj, ensure_ascii=False, indent=2)
+    _sync_key_form_widgets(cipher_id, key_obj)
+
+
 def _on_load_free_text(cipher_id: str) -> None:
-    free_text = service.load_free_text(cipher_id)
+    meta = service.load_meta(cipher_id)
+    free_text = str(meta.get("free_text", "")) if isinstance(meta.get("free_text"), str) else ""
     st.session_state["pg_plaintext"] = free_text
     st.session_state["pg_ciphertext"] = ""
     st.session_state["pg_decrypted"] = ""
+
+    raw_key_example = meta.get("raw_key_example", {})
+    if isinstance(raw_key_example, dict) and raw_key_example:
+        _load_key_example_into_playground(cipher_id, raw_key_example)
+
     st.session_state["pg_loaded_source_type"] = "free_text"
     st.session_state["pg_loaded_variant_id"] = None
     st.session_state["pg_loaded_cipher_id"] = cipher_id
-    _set_feedback("info", f"{t('Loaded free_text')}. {t('Read-only: does not modify saved data')}")
+
+    message = f"{t('Loaded free_text')}. {t('Read-only: does not modify saved data')}"
+    if isinstance(raw_key_example, dict) and raw_key_example:
+        message += f" {t('Loaded key example')}."
+    _set_feedback("info", message)
 
 
 def _on_reset_playground() -> None:
@@ -515,10 +531,77 @@ def _data_manager() -> None:
     st.write(f"{t('Data directory')}: {service.data_dir()}")
     st.write(f"{t('Cipher directory')}: {cipher_dir}")
 
-    st.subheader(t("Variants"))
     variants_obj = service.load_variants(cipher_id)
     items = variants_obj.get("items", []) if isinstance(variants_obj, dict) else []
+    meta = variants_obj.get("meta", {}) if isinstance(variants_obj, dict) else {}
+    if not isinstance(meta, dict):
+        meta = {}
 
+    meta_free_text_key = f"dm.meta.free_text.{cipher_id}"
+    meta_notes_key = f"dm.meta.notes.{cipher_id}"
+    meta_key_json_key = f"dm.meta.raw_key_example.{cipher_id}"
+    meta_error_key = f"dm.meta.error.{cipher_id}"
+
+    if meta_free_text_key not in st.session_state:
+        st.session_state[meta_free_text_key] = str(meta.get("free_text", "")) if isinstance(meta.get("free_text"), str) else ""
+    if meta_notes_key not in st.session_state:
+        st.session_state[meta_notes_key] = str(meta.get("notes", "")) if isinstance(meta.get("notes"), str) else ""
+    if meta_key_json_key not in st.session_state:
+        raw_key_example = meta.get("raw_key_example", {})
+        if not isinstance(raw_key_example, dict):
+            raw_key_example = {}
+        st.session_state[meta_key_json_key] = _pretty_json(raw_key_example)
+
+    if meta_error := st.session_state.get(meta_error_key):
+        st.error(str(meta_error))
+        st.session_state.pop(meta_error_key, None)
+
+    def _build_meta_payload() -> dict[str, Any] | None:
+        raw_key_text = str(st.session_state.get(meta_key_json_key, "")).strip()
+        if not raw_key_text:
+            raw_key_example_obj: dict[str, Any] = {}
+        else:
+            try:
+                parsed = json.loads(raw_key_text)
+            except json.JSONDecodeError as e:
+                message = f"{t('JSON error')}: {e}"
+                st.session_state[meta_error_key] = message
+                st.error(message)
+                return None
+            if not isinstance(parsed, dict):
+                message = t("raw key example JSON must be object")
+                st.session_state[meta_error_key] = message
+                st.error(message)
+                return None
+            raw_key_example_obj = parsed
+
+        return {
+            "free_text": str(st.session_state.get(meta_free_text_key, "")),
+            "notes": str(st.session_state.get(meta_notes_key, "")),
+            "raw_key_example": raw_key_example_obj,
+        }
+
+    st.subheader(t("Meta"))
+    st.text_area(t("Free text"), key=meta_free_text_key, height=180)
+    st.text_area(t("Notes"), key=meta_notes_key, height=100)
+    st.text_area(t("Raw key example"), key=meta_key_json_key, height=160)
+    if st.button(t("Save meta"), key=f"dm.save_meta.{cipher_id}"):
+        meta_payload = _build_meta_payload()
+        if meta_payload is not None:
+            payload = {
+                "meta": meta_payload,
+                "items": [dict(x) for x in items if isinstance(x, dict)],
+            }
+            errors = service.validate_variants_obj(payload)
+            if errors:
+                st.error(t("Validation errors"))
+                for err in errors:
+                    st.error(err)
+            else:
+                service.save_variants(cipher_id, payload)
+                st.success(t("Saved meta"))
+
+    st.subheader(t("Variants"))
     st.dataframe(items)
 
     options = [f"id={it.get('id')}" for it in items if isinstance(it, dict) and "id" in it]
@@ -715,7 +798,7 @@ def _data_manager() -> None:
             if not replaced:
                 updated.append(row)
 
-            payload = {"items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
+            payload = {"meta": meta, "items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
             errors = service.validate_variants_obj(payload)
             if errors:
                 st.error(t("Validation errors"))
@@ -727,7 +810,7 @@ def _data_manager() -> None:
     with c2:
         if st.button(t("Delete"), key="dm_delete"):
             updated = [dict(x) for x in items if isinstance(x, dict) and x.get("id") != int(vid)]
-            payload = {"items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
+            payload = {"meta": meta, "items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
             errors = service.validate_variants_obj(payload)
             if errors:
                 st.error(t("Validation errors"))
@@ -797,14 +880,9 @@ def _data_manager() -> None:
                 except Exception as e:
                     st.error(str(e))
 
-    st.subheader(t("Free text"))
-    ft = st.text_area(t("free_text file"), value=service.load_free_text(cipher_id), height=180)
-    if st.button(t("Save free_text")):
-        service.save_free_text(cipher_id, ft)
-        st.success(t("Saved free_text"))
-
 
 def main() -> None:
+
     _ = get_lang()
     page = st.sidebar.radio(t("Page"), [t("Playground"), t("Data Manager")])
     if page == t("Playground"):

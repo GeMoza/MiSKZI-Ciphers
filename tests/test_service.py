@@ -17,3 +17,33 @@ def test_validate_variants_obj_basic_errors() -> None:
     assert "items[1].mode invalid" in errors
     assert "items[1].text must be str" in errors
     assert "items[1].key must be dict" in errors
+
+
+def test_validate_variants_obj_accepts_meta() -> None:
+    obj = {
+        "meta": {
+            "free_text": "пример",
+            "notes": "заметки",
+            "raw_key_example": {"k": 3},
+        },
+        "items": [],
+    }
+
+    assert validate_variants_obj(obj) == []
+
+
+def test_validate_variants_obj_rejects_bad_meta() -> None:
+    obj = {
+        "meta": {
+            "free_text": 1,
+            "notes": [],
+            "raw_key_example": "{}",
+        },
+        "items": [],
+    }
+
+    errors = validate_variants_obj(obj)
+
+    assert "meta.free_text must be str" in errors
+    assert "meta.notes must be str" in errors
+    assert "meta.raw_key_example must be dict" in errors
