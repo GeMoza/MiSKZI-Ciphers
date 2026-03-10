@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 
 from miskzi_ciphers.common.alphabet import RU_33, build_index
 from miskzi_ciphers.common.keyparse import as_char, reject_unknown_keys, require
@@ -16,13 +17,13 @@ class HillCipher:
     def describe(self) -> CipherInfo:
         return {
             "name": self.name,
-            "title": "Шифр Хилла",
+            "title": "???? ?????",
             "family": "polygraphic",
             "params": [
-                {"name": "matrix", "type": "json", "required": True, "help": "Квадратная матрица n x n", "example": [[1, 2], [3, 5]]},
-                {"name": "pad_char", "type": "str", "required": False, "help": "Символ RU_33 для дополнения"},
+                {"name": "matrix", "type": "json", "required": True, "help": "?????????? ??????? n x n", "example": [[1, 2], [3, 5]]},
+                {"name": "pad_char", "type": "str", "required": False, "help": "?????? RU_33 ??? ??????????"},
             ],
-            "notes": "Работа по mod 33. Матрица должна быть обратимой: gcd(det,33)=1.",
+            "notes": "?????? ?? mod 33. ??? ????????????? ??????? ?????? ???? ?????????: gcd(det,33)=1.",
         }
 
     def parse_key(self, raw_key: Key) -> Key:
@@ -36,14 +37,14 @@ class HillCipher:
         if not isinstance(matrix_raw, list) or not matrix_raw or not all(isinstance(row, list) for row in matrix_raw):
             raise ValueError("hill: 'matrix' must be a non-empty square list of lists.")
 
-        matrix: list[list[int]] = [[int(x) for x in row] for row in matrix_raw]
+        try:
+            matrix: list[list[int]] = [[int(x) for x in row] for row in matrix_raw]
+        except (TypeError, ValueError) as exc:
+            raise ValueError("hill: matrix elements must be integers.") from exc
+
         n = len(matrix)
         if n < 2 or any(len(row) != n for row in matrix):
             raise ValueError("hill: matrix must be square n x n with n >= 2.")
-
-        det = _determinant(matrix)
-        if gcd(det, MODULUS) != 1:
-            raise ValueError("hill: matrix not invertible mod 33.")
 
         pad_char = raw_key.get("pad_char")
         if pad_char is not None:
@@ -73,6 +74,8 @@ class HillCipher:
         return self._apply_matrix(text, matrix)
 
     def decrypt(self, ciphertext: str, key: Key) -> str:
+        if not _is_invertible_mod(key["matrix"], MODULUS):
+            raise ValueError("hill: matrix not invertible mod 33.")
         inv = _inverse_matrix_mod(key["matrix"], MODULUS)
         return self._apply_matrix(ciphertext.upper(), inv)
 
@@ -84,10 +87,10 @@ class HillCipher:
 
         for offset in range(0, len(text), n):
             block = text[offset : offset + n]
-            vec = [idx[ch] for ch in block]
+            vec = [_char_to_hill_value(ch, idx) for ch in block]
             for row in matrix:
                 total = sum(row[i] * vec[i] for i in range(n)) % MODULUS
-                out.append(RU_33[total])
+                out.append(_hill_value_to_char(total))
         return "".join(out)
 
 
@@ -132,6 +135,21 @@ def _inverse_matrix_mod(matrix: list[list[int]], mod: int) -> list[list[int]]:
             aug[row] = [(aug[row][k] - factor * aug[col][k]) % mod for k in range(2 * n)]
 
     return [row[n:] for row in aug]
+
+
+def _is_invertible_mod(matrix: list[list[int]], mod: int) -> bool:
+    return gcd(_determinant(matrix), mod) == 1
+
+
+def _char_to_hill_value(ch: str, idx: Mapping[str, int]) -> int:
+    return idx[ch] + 1
+
+
+def _hill_value_to_char(value: int) -> str:
+    normalized = value % MODULUS
+    if normalized == 0:
+        normalized = MODULUS
+    return RU_33[normalized - 1]
 
 
 def get_cipher() -> HillCipher:
