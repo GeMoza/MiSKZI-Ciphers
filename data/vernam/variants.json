@@ -1,1 +1,84 @@
-{"items": []}
+{
+  "items": [
+    {
+      "id": 1,
+      "mode": "decrypt",
+      "text": "рв.йввэ",
+      "key": {
+        "keyword": "абрикос"
+      }
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "опх.кфл",
+      "key": {
+        "keyword": "садовод"
+      }
+    },
+    {
+      "id": 3,
+      "mode": "decrypt",
+      "text": "мяо.ыещ",
+      "key": {
+        "keyword": "варенье"
+      }
+    },
+    {
+      "id": 4,
+      "mode": "decrypt",
+      "text": "цтщмглр",
+      "key": {
+        "keyword": "черника"
+      }
+    },
+    {
+      "id": 5,
+      "mode": "decrypt",
+      "text": "бчдэждб",
+      "key": {
+        "keyword": "пломбир"
+      }
+    },
+    {
+      "id": 6,
+      "mode": "decrypt",
+      "text": "б.ыысу",
+      "key": {
+        "keyword": "компот"
+      }
+    },
+    {
+      "id": 7,
+      "mode": "decrypt",
+      "text": "эюлт.э",
+      "key": {
+        "keyword": "лагуна"
+      }
+    },
+    {
+      "id": 8,
+      "mode": "decrypt",
+      "text": ".йаурьб",
+      "key": {
+        "keyword": "система"
+      }
+    },
+    {
+      "id": 9,
+      "mode": "decrypt",
+      "text": "э.чп.",
+      "key": {
+        "keyword": "питон"
+      }
+    },
+    {
+      "id": 10,
+      "mode": "decrypt",
+      "text": "шёцэыдмъм",
+      "key": {
+        "keyword": "чебурашка"
+      }
+    }
+  ]
+}
