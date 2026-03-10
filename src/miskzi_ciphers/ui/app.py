@@ -309,6 +309,25 @@ def _sync_key_form_widgets(cipher_id: str, key_obj: dict[str, Any]) -> None:
         _ensure_widget_state(f"pg_key.{cipher_id}.{name}", coerced, force=True)
 
 
+def _clear_playground_key(cipher_id: str | None = None) -> None:
+    st.session_state["pg_key_form_values"] = {}
+    st.session_state["pg_key_raw_json"] = ""
+
+    if not cipher_id:
+        return
+
+    desc = service.get_cipher_description(cipher_id)
+    params = desc.get("params", []) if isinstance(desc, dict) else []
+    for p in params or []:
+        if not isinstance(p, dict):
+            continue
+        name = str(p.get("name", "")).strip()
+        if not name:
+            continue
+        cleared = _coerce_widget_value(p, None, cipher_id=cipher_id, param_name=name)
+        _ensure_widget_state(f"pg_key.{cipher_id}.{name}", cleared, force=True)
+
+
 def _set_feedback(level: str, message: str) -> None:
     st.session_state["pg_feedback"] = (level, message)
 
@@ -376,6 +395,8 @@ def _on_load_free_text(cipher_id: str) -> None:
     raw_key_example = meta.get("raw_key_example", {})
     if isinstance(raw_key_example, dict) and raw_key_example:
         _load_key_example_into_playground(cipher_id, raw_key_example)
+    else:
+        _clear_playground_key(cipher_id)
 
     st.session_state["pg_loaded_source_type"] = "free_text"
     st.session_state["pg_loaded_variant_id"] = None
@@ -388,6 +409,8 @@ def _on_load_free_text(cipher_id: str) -> None:
 
 
 def _on_reset_playground() -> None:
+    cipher_id = st.session_state.get("ui_cipher_id")
+    _clear_playground_key(str(cipher_id) if isinstance(cipher_id, str) else None)
     st.session_state["pg_plaintext"] = ""
     st.session_state["pg_ciphertext"] = ""
     st.session_state["pg_decrypted"] = ""
