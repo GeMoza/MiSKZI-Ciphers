@@ -84,13 +84,13 @@
 
 - `hill`
 - `ramsey`
-- шифр Рубика
+- `rubik_2x2`
 
 Для кода проекта это означает следующее:
 
 - `hill` уже реализован и исторически проверяется тестом `tests/test_pz4_vectors.py`;
 - `ramsey` реализован отдельным подпакетом `src/miskzi_ciphers/ciphers/ramsey/`, имеет данные `data/ramsey/variants.json` и тест `tests/test_pz5_ramsey_vectors.py`;
-- шифр Рубика описан в PDF, но в текущем Python-коде проекта не реализован.
+- `rubik_2x2` реализован отдельным подпакетом `src/miskzi_ciphers/ciphers/rubik_2x2/`, использует данные `data/rubik_2x2/variants.json` и проверяется тестом `tests/test_pz5_rubik_vectors.py`.
 
 Граница между ПЗ-4 и ПЗ-5 в кодовой базе не идеальна: по методичке Хилл уже лежит в ПЗ-05, но в существующей структуре тестов он остался в `test_pz4_vectors.py`. Это документированное ограничение текущего состояния, а не признак того, что Хилл относится только к ПЗ-4.
 
@@ -115,6 +115,7 @@
 - `polybius`
 - `ramsey`
 - `richelieu`
+- `rubik_2x2`
 - `scytale`
 - `trisemus`
 - `vernam`

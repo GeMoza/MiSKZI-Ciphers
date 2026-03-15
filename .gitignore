@@ -62,3 +62,5 @@ docs/pdf/*
 
 *.zip
 *.7z
+.codex_tmp
+tmp/*

@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "free_text": "РТУ МИРЭА",
+    "notes": "Контрольный пример берётся из ПЗ-05: исходный текст размещается по рисунку 21, затем применяются ходы 1R, 3R, 4R2, а результат считывается по рисунку 24. Дополнительный вектор с текстом 'АБВ ГДЕЁЖ' — служебный roundtrip-пример проекта, а не отдельный контрольный пример методички.",
+    "raw_key_example": {
+      "moves": [
+        {
+          "face": 1,
+          "direction": "right",
+          "turns": 1
+        },
+        {
+          "face": 3,
+          "direction": "right",
+          "turns": 1
+        },
+        {
+          "face": 4,
+          "direction": "right",
+          "turns": 2
+        }
+      ]
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "mode": "encrypt",
+      "text": "РТУ МИРЭА",
+      "key": {
+        "moves": [
+          {
+            "face": 1,
+            "direction": "right",
+            "turns": 1
+          },
+          {
+            "face": 3,
+            "direction": "right",
+            "turns": 1
+          },
+          {
+            "face": 4,
+            "direction": "right",
+            "turns": 2
+          }
+        ]
+      },
+      "expected": "ТМРРИАЭУ"
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "ТМРРИАЭУ",
+      "key": {
+        "moves": [
+          {
+            "face": 1,
+            "direction": "right",
+            "turns": 1
+          },
+          {
+            "face": 3,
+            "direction": "right",
+            "turns": 1
+          },
+          {
+            "face": 4,
+            "direction": "right",
+            "turns": 2
+          }
+        ]
+      },
+      "expected": "РТУ МИРЭА"
+    },
+    {
+      "id": 3,
+      "mode": "encrypt",
+      "text": "АБВ ГДЕЁЖ",
+      "key": {
+        "moves": [
+          {
+            "face": 1,
+            "direction": "right",
+            "turns": 1
+          },
+          {
+            "face": 3,
+            "direction": "right",
+            "turns": 1
+          },
+          {
+            "face": 4,
+            "direction": "right",
+            "turns": 2
+          }
+        ]
+      },
+      "expected": "БГЕАДЖЁВ"
+    }
+  ]
+}

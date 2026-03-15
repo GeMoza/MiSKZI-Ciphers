@@ -72,6 +72,7 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         "adfgvx": ({"keyword": "DRIVE"}, "TEST123"),
         "hill": ({"matrix": [[1, 2], [3, 5]]}, "ТЕСТ"),
         "ramsey": ({}, "PRACTICE MAKES PERFECT"),
+        "rubik_2x2": ({}, "РТУ МИРЭА"),
     }
 
 
