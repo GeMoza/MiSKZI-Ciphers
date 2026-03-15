@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "free_text": "HELLO WORLD",
+    "notes": "Invariant: grouping is applied to the final digit stream for display only, so 5-digit blocks may split 2-digit Ramsey codes. Decrypt strips only literal spaces before parsing the numeric stream.",
+    "raw_key_example": {
+      "keyword": "ORBIT",
+      "anagram": "SPARE",
+      "group_size": 5
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "mode": "encrypt",
+      "text": "MEET AT NOON",
+      "key": {
+        "keyword": "ORBIT",
+        "anagram": "SPARE",
+        "group_size": 5
+      },
+      "expected": "19393 91119 15281 52827 1611"
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "19393 91119 15281 52827 1611",
+      "key": {
+        "keyword": "ORBIT",
+        "anagram": "SPARE",
+        "group_size": 5
+      },
+      "expected": "MEET AT NOON"
+    },
+    {
+      "id": 3,
+      "mode": "encrypt",
+      "text": "HELLO WORLD",
+      "key": {
+        "keyword": "PLANET",
+        "anagram": "BOARD",
+        "group_size": 4
+      },
+      "expected": "1228 2339 1928 1215 3512 31"
+    }
+  ]
+}

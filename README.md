@@ -1,79 +1,53 @@
 # MiSKZI-Ciphers
 
-Учебный проект по дисциплине «Методы и средства криптографической защиты информации».
+`MiSKZI-Ciphers` — учебный проект на Python по классическим шифрам. В репозитории собраны реализации с единым контрактом шифров, Streamlit UI и наборами вариантов из методичек в `data/*/variants.json`.
 
-Проект содержит набор классических шифров на Python, единый контракт для `encrypt` / `decrypt` / `parse_key`, данные вариантов в `data/*/variants.json`, service-слой и Streamlit UI для проверки алгоритмов и работы с учебными вариантами.
+## Что есть в проекте
 
-Текущая версия: **0.8.5**
+- реализованные шифры: `adfgvx`, `affine`, `alberti`, `atbash`, `bacon`, `binary_code`, `book_cipher`, `caesar`, `cardano_grille`, `gronsfeld`, `hill`, `litorea`, `magic_square`, `morse`, `polybius`, `ramsey`, `richelieu`, `scytale`, `trisemus`, `vernam`, `vigenere`;
+- единый интерфейс `describe()/parse_key()/encrypt()/decrypt()` для всех шифров;
+- Streamlit Playground для ручного запуска и проверки roundtrip;
+- Data Manager для редактирования `variants.json` и `meta`;
+- формат учебных данных `variants.json + meta`.
 
-## Реализованные шифры
-
-Список соответствует реально существующим модулям в `src/miskzi_ciphers/ciphers/*`:
-
-- Атбаш
-- Шифр Цезаря
-- Скитала
-- Квадрат Полибия
-- Магический квадрат 4×4
-- Книжный шифр
-- Аффинный шифр
-- Двоичный код
-- Русская литорея
-- Диск Альберти
-- Шифр Виженера
-- Шифр Трисемуса
-- Решётка Кардано
-- Шифр Бэкона
-- Шифр Гронсфельда
-- Шифр Ришелье
-- Азбука Морзе
-- Шифр Вернама
-- Шифр ADFGVX
-- Шифр Хилла
-
-## Streamlit UI
-
-### Playground
-
-- выбор шифра
-- загрузка варианта из `variants.json`
-- загрузка свободного текста из `meta.free_text`
-- подгрузка примера ключа из `meta.raw_key_example`
-- ввод ключа в режимах Form и Raw JSON
-- шифрование, дешифрование и roundtrip-проверка
-
-### Data Manager
-
-- редактирование `variants.json`
-- редактирование `meta.free_text`
-- редактирование `meta.notes`
-- редактирование `meta.raw_key_example`
-- добавление и удаление вариантов
-- валидация структуры данных
-
-
-## Установка и запуск (Windows + conda)
+## Быстрый запуск
 
 ### 1. Создать окружение
 
-conda create -n miskzi-ciphers python=3.11 -y  
-conda activate miskzi-ciphers  
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-### 2. Установить проект с UI
+### 2. Установить проект
 
-В корне репозитория:
-python -m pip install -U pip  
-python -m pip install -e ".[ui]"  
+```bash
+python -m pip install -U pip
+python -m pip install -e ".[ui,dev]"
+```
 
-### 3. Запустить интерфейс
+### 3. Запустить UI
 
-python -m streamlit run src/miskzi_ciphers/ui/app.py  
+```bash
+python -m streamlit run src/miskzi_ciphers/ui/app.py
+```
 
-После запуска откройте в браузере:
-http://localhost:8501
-
-## Тестирование
+### 4. Прогнать тесты
 
 ```bash
 pytest -q
 ```
+
+## Структура проекта
+
+- `src/miskzi_ciphers/ciphers/` — реализации шифров
+- `src/miskzi_ciphers/common/` — общие типы, registry и утилиты
+- `src/miskzi_ciphers/app/service.py` — сервисный слой
+- `src/miskzi_ciphers/ui/` — Streamlit UI
+- `data/` — учебные варианты и метаданные
+- `tests/` — автотесты
+- `docs/` — подробная документация
+
+## Документация
+
+Подробная документация находится в [docs/README.md](docs/README.md).

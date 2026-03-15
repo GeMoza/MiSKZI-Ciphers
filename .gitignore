@@ -55,3 +55,10 @@ Thumbs.db
 # Local configuration
 .env
 .env.*
+
+# Local PDF methodics
+docs/pdf/*
+!docs/pdf/README.md
+
+*.zip
+*.7z
