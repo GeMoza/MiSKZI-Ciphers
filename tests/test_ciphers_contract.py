@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -71,7 +71,7 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         "vernam": ({"keyword": "...."}, "ТЕСТ"),
         "adfgvx": ({"keyword": "DRIVE"}, "TEST123"),
         "hill": ({"matrix": [[1, 2], [3, 5]]}, "ТЕСТ"),
-        "ramsey": ({"keyword": "ORBIT", "anagram": "SPARE", "group_size": 5}, "MEET AT NOON"),
+        "ramsey": ({}, "PRACTICE MAKES PERFECT"),
     }
 
 

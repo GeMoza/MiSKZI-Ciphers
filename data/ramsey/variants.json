@@ -1,10 +1,10 @@
 {
   "meta": {
-    "free_text": "HELLO WORLD",
-    "notes": "Invariant: grouping is applied to the final digit stream for display only, so 5-digit blocks may split 2-digit Ramsey codes. Decrypt strips only literal spaces before parsing the numeric stream.",
+    "free_text": "PRACTICE MAKES PERFECT",
+    "notes": "Шифр Рамзая в ПЗ-05 использует фиксированные таблицы SUBWAY и ASINTOER. Пробелы во входном тексте нормализуются в '/', а итоговый поток цифр разбивается на группы по 5 символов только для удобства чтения.",
     "raw_key_example": {
-      "keyword": "ORBIT",
-      "anagram": "SPARE",
+      "keyword_table": "SUBWAY",
+      "anagram": "ASINTOER",
       "group_size": 5
     }
   },
@@ -12,35 +12,46 @@
     {
       "id": 1,
       "mode": "encrypt",
-      "text": "MEET AT NOON",
+      "text": "PRACTICE MAKES PERFECT",
       "key": {
-        "keyword": "ORBIT",
-        "anagram": "SPARE",
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
         "group_size": 5
       },
-      "expected": "19393 91119 15281 52827 1611"
+      "expected": "85458 06180 39496 58830 94853 49238 06"
     },
     {
       "id": 2,
       "mode": "decrypt",
-      "text": "19393 91119 15281 52827 1611",
+      "text": "85458 06180 39496 58830 94853 49238 06",
       "key": {
-        "keyword": "ORBIT",
-        "anagram": "SPARE",
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
         "group_size": 5
       },
-      "expected": "MEET AT NOON"
+      "expected": "PRACTICE MAKES PERFECT"
     },
     {
       "id": 3,
-      "mode": "encrypt",
-      "text": "HELLO WORLD",
+      "mode": "decrypt",
+      "text": "73993 49495 19939 48285",
       "key": {
-        "keyword": "PLANET",
-        "anagram": "BOARD",
-        "group_size": 4
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
       },
-      "expected": "1228 2339 1928 1215 3512 31"
+      "expected": "NEVER GIVE UP"
+    },
+    {
+      "id": 4,
+      "mode": "decrypt",
+      "text": "93278 32794 10946 98394 80585 16593 94292 94958 7",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "LONDON IS THE CAPITAL OF GB"
     }
   ]
 }

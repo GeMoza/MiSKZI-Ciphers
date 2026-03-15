@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -8,6 +8,19 @@ import pytest
 from miskzi_ciphers.app import service
 from miskzi_ciphers.common.paths import get_data_dir
 from miskzi_ciphers.common.registry import REGISTRY, load_cipher
+
+
+METHODICAL_KEY = {
+    "keyword_table": "SUBWAY",
+    "anagram": "ASINTOER",
+    "group_size": 5,
+}
+
+
+CONTROL_PLAINTEXT = "PRACTICE MAKES PERFECT"
+CONTROL_CIPHERTEXT = "85458 06180 39496 58830 94853 49238 06"
+VARIANT_2_CIPHERTEXT = "73993 49495 19939 48285"
+VARIANT_4_CIPHERTEXT = "93278 32794 10946 98394 80585 16593 94292 94958 7"
 
 
 def _ramsey_variants() -> dict[str, object]:
@@ -25,11 +38,11 @@ def test_ramsey_is_discovered_by_registry() -> None:
 def test_ramsey_parse_key_canonicalizes_valid_input() -> None:
     cipher = load_cipher("ramsey")
 
-    parsed = cipher.parse_key({"keyword": "Letter", "anagram": "spare", "group_size": "7"})
+    parsed = cipher.parse_key({"keyword_table": "subway", "anagram": "asintoer", "group_size": "7"})
 
     assert parsed == {
-        "keyword": "LETR",
-        "anagram": "SPARE",
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
         "group_size": 7,
     }
 
@@ -37,12 +50,11 @@ def test_ramsey_parse_key_canonicalizes_valid_input() -> None:
 @pytest.mark.parametrize(
     ("raw_key", "message"),
     [
-        ({}, "Missing key 'keyword'."),
-        ({"keyword": "ORBIT"}, "Missing key 'anagram'."),
-        ({"keyword": "ORBIT", "anagram": "LEVEL"}, "duplicate letters"),
-        ({"keyword": "ORB1T", "anagram": "SPARE"}, "Latin letters A-Z"),
-        ({"keyword": "ORBIT", "anagram": "SPARE", "group_size": 0}, "positive integer"),
-        ({"keyword": "ORBIT", "anagram": "SPARE", "extra": 1}, "Unknown key"),
+        ({"keyword_table": "SUBWAY1"}, "Latin letters A-Z"),
+        ({"keyword_table": "ORBIT"}, "must be 'SUBWAY'"),
+        ({"anagram": "SPARE"}, "must be 'ASINTOER'"),
+        ({"group_size": 0}, "positive integer"),
+        ({"extra": 1}, "Unknown key"),
     ],
 )
 def test_ramsey_parse_key_rejects_invalid_input(raw_key: dict[str, object], message: str) -> None:
@@ -54,46 +66,74 @@ def test_ramsey_parse_key_rejects_invalid_input(raw_key: dict[str, object], mess
 
 def test_ramsey_encrypt_matches_control_vector() -> None:
     cipher = load_cipher("ramsey")
-    variants = _ramsey_variants()
-    item = next(entry for entry in variants["items"] if isinstance(entry, dict) and entry.get("id") == 1)
+    key = cipher.parse_key(METHODICAL_KEY)
 
-    key = cipher.parse_key(item["key"])
-
-    assert cipher.encrypt(str(item["text"]), key) == item["expected"]
+    assert cipher.encrypt(CONTROL_PLAINTEXT, key) == CONTROL_CIPHERTEXT
 
 
 def test_ramsey_decrypt_matches_control_vector() -> None:
     cipher = load_cipher("ramsey")
-    variants = _ramsey_variants()
-    item = next(entry for entry in variants["items"] if isinstance(entry, dict) and entry.get("id") == 2)
+    key = cipher.parse_key(METHODICAL_KEY)
 
-    key = cipher.parse_key(item["key"])
-
-    assert cipher.decrypt(str(item["text"]), key) == item["expected"]
+    assert cipher.decrypt(CONTROL_CIPHERTEXT, key) == CONTROL_PLAINTEXT
 
 
 def test_ramsey_decrypt_accepts_grouped_and_ungrouped_ciphertext() -> None:
     cipher = load_cipher("ramsey")
-    key = cipher.parse_key({"keyword": "ORBIT", "anagram": "SPARE", "group_size": 5})
-    grouped = "19393 91119 15281 52827 1611"
-    ungrouped = "193939111915281528271611"
+    key = cipher.parse_key({})
+    grouped = CONTROL_CIPHERTEXT
+    ungrouped = CONTROL_CIPHERTEXT.replace(" ", "")
 
-    assert cipher.decrypt(grouped, key) == "MEET AT NOON"
-    assert cipher.decrypt(ungrouped, key) == "MEET AT NOON"
+    assert cipher.decrypt(grouped, key) == CONTROL_PLAINTEXT
+    assert cipher.decrypt(ungrouped, key) == CONTROL_PLAINTEXT
 
 
-def test_ramsey_roundtrip_additional_example() -> None:
+def test_ramsey_decrypts_additional_methodics_variant() -> None:
     cipher = load_cipher("ramsey")
-    key = cipher.parse_key({"keyword": "PLANET", "anagram": "BOARD", "group_size": 4})
-    plaintext = "HELLO WORLD"
+    key = cipher.parse_key({})
+
+    assert cipher.decrypt(VARIANT_2_CIPHERTEXT, key) == "NEVER GIVE UP"
+    assert cipher.decrypt(VARIANT_2_CIPHERTEXT.replace(" ", ""), key) == "NEVER GIVE UP"
+
+
+def test_ramsey_roundtrip_with_methodical_defaults() -> None:
+    cipher = load_cipher("ramsey")
+    key = cipher.parse_key({})
+    plaintext = "LONDON IS THE CAPITAL OF GB"
 
     encrypted = cipher.encrypt(plaintext, key)
 
-    assert encrypted == "1228 2339 1928 1215 3512 31"
+    assert encrypted == VARIANT_4_CIPHERTEXT
     assert cipher.decrypt(encrypted, key) == plaintext
+
+
+@pytest.mark.parametrize(
+    ("ciphertext", "message"),
+    [
+        ("8", "incomplete 8x/9x"),
+        ("78", "incomplete 8x/9x"),
+        ("12A3", "digits and grouping spaces"),
+    ],
+)
+def test_ramsey_decrypt_rejects_invalid_ciphertext(ciphertext: str, message: str) -> None:
+    cipher = load_cipher("ramsey")
+    key = cipher.parse_key({})
+
+    with pytest.raises(ValueError, match=message):
+        cipher.decrypt(ciphertext, key)
 
 
 def test_ramsey_variants_file_passes_existing_validation_flow() -> None:
     variants = service.load_variants("ramsey")
 
     assert service.validate_variants_obj(variants) == []
+
+
+def test_ramsey_variants_match_methodics_vectors() -> None:
+    variants = _ramsey_variants()
+    items = {entry["id"]: entry for entry in variants["items"] if isinstance(entry, dict) and "id" in entry}
+
+    assert items[1]["expected"] == CONTROL_CIPHERTEXT
+    assert items[2]["expected"] == CONTROL_PLAINTEXT
+    assert items[3]["expected"] == "NEVER GIVE UP"
+    assert items[4]["expected"] == "LONDON IS THE CAPITAL OF GB"

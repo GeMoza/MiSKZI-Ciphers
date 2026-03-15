@@ -1,6 +1,7 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 from miskzi_ciphers.common.registry import list_ciphers, load_cipher
+
 
 def build_min_raw_key_from_describe(info: dict, cipher_name: str) -> dict:
     raw = {}
@@ -31,6 +32,7 @@ def build_min_raw_key_from_describe(info: dict, cipher_name: str) -> dict:
         raw["key_path"] = str(Path("data") / "book_cipher" / "key.txt")
     return raw
 
+
 def test_registry_contract_loads_and_validates_without_bad_parse_key_calls():
     for name in list_ciphers():
         c = load_cipher(name)
@@ -49,6 +51,8 @@ def test_registry_contract_loads_and_validates_without_bad_parse_key_calls():
             sample = "ТЕСТТЕ"
         elif name == "adfgvx":
             sample = "TEST"
+        elif name == "ramsey":
+            sample = "PRACTICE MAKES PERFECT"
         enc = c.encrypt(sample, key)
         dec = c.decrypt(enc, key)
         assert isinstance(enc, str)
