@@ -40,7 +40,7 @@ def test_adfgvx_roundtrip() -> None:
 def test_hill_roundtrip() -> None:
     cipher = load_cipher("hill")
     key = cipher.parse_key({"matrix": [[1, 2], [3, 5]]})
-    plaintext = "????"
+    plaintext = "ТЕСТ"
     assert cipher.decrypt(cipher.encrypt(plaintext, key), key) == plaintext
 
 
@@ -48,19 +48,19 @@ def test_hill_requires_padding_or_exact_block() -> None:
     cipher = load_cipher("hill")
     key = cipher.parse_key({"matrix": [[1, 2], [3, 5]]})
     with pytest.raises(ValueError):
-        cipher.encrypt("???", key)
+        cipher.encrypt("ТЕС", key)
 
 
 def test_hill_matches_pz5_example() -> None:
     cipher = load_cipher("hill")
     key = cipher.parse_key({"matrix": [[14, 8, 3], [8, 5, 2], [3, 2, 1]]})
-    assert cipher.encrypt("??????", key) == "??????"
+    assert cipher.encrypt("РТУИИИ", key) == "ЛФОСРЩ"
 
 
 def test_hill_allows_non_invertible_matrix_for_encrypt() -> None:
     cipher = load_cipher("hill")
     key = cipher.parse_key({"matrix": NON_INVERTIBLE_HILL_MATRIX})
-    encrypted = cipher.encrypt("???", key)
+    encrypted = cipher.encrypt("ТРИ", key)
     assert isinstance(encrypted, str)
     assert len(encrypted) == 3
 
@@ -69,4 +69,12 @@ def test_hill_decrypt_requires_invertible_matrix() -> None:
     cipher = load_cipher("hill")
     key = cipher.parse_key({"matrix": NON_INVERTIBLE_HILL_MATRIX})
     with pytest.raises(ValueError, match="hill: matrix not invertible mod 33\\."):
-        cipher.decrypt("???", key)
+        cipher.decrypt("АБВ", key)
+
+
+def test_hill_rejects_non_ru33_symbols_with_explicit_error() -> None:
+    cipher = load_cipher("hill")
+    key = cipher.parse_key({"matrix": [[1, 2], [3, 5]]})
+
+    with pytest.raises(ValueError, match=r"hill: plaintext supports only RU_33 letters \(the alphabet includes 'Ё'\); invalid: '\\?'\\."):
+        cipher.encrypt("?", key)

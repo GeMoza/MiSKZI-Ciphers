@@ -9,6 +9,8 @@ from miskzi_ciphers.common.math_utils import gcd, modinv
 from miskzi_ciphers.common.types import CipherInfo, Key
 
 MODULUS = 33
+ALPHABET = RU_33
+ALPHABET_INDEX = build_index(ALPHABET)
 
 
 class HillCipher:
@@ -17,13 +19,13 @@ class HillCipher:
     def describe(self) -> CipherInfo:
         return {
             "name": self.name,
-            "title": "???? ?????",
+            "title": "Шифр Хилла",
             "family": "polygraphic",
             "params": [
-                {"name": "matrix", "type": "json", "required": True, "help": "?????????? ??????? n x n", "example": [[1, 2], [3, 5]]},
-                {"name": "pad_char", "type": "str", "required": False, "help": "?????? RU_33 ??? ??????????"},
+                {"name": "matrix", "type": "json", "required": True, "help": "Квадратная матрица n x n", "example": [[1, 2], [3, 5]]},
+                {"name": "pad_char", "type": "str", "required": False, "help": "Символ RU_33 для дополнения"},
             ],
-            "notes": "?????? ?? mod 33. ??? ????????????? ??????? ?????? ???? ?????????: gcd(det,33)=1.",
+            "notes": "Работает по mod 33. Для расшифрования матрица должна быть обратимой: gcd(det,33)=1.",
         }
 
     def parse_key(self, raw_key: Key) -> Key:
@@ -57,37 +59,33 @@ class HillCipher:
     def encrypt(self, plaintext: str, key: Key) -> str:
         matrix = key["matrix"]
         n = len(matrix)
-        idx = build_index(RU_33)
-
-        text = plaintext.upper()
-        for ch in text:
-            if ch not in idx:
-                raise ValueError(f"hill: unsupported symbol {ch!r}; only RU_33 letters are allowed.")
 
         pad_char = key.get("pad_char")
-        if len(text) % n != 0:
-            if pad_char is None:
-                raise ValueError(f"hill: plaintext length ({len(text)}) must be a multiple of matrix size {n}.")
+        text = _normalize_hill_text(plaintext, field="plaintext")
+        if len(text) % n != 0 and pad_char is not None:
             missing = (-len(text)) % n
             text += pad_char * missing
+        _ensure_block_multiple(text, block_size=n, field="plaintext")
 
         return self._apply_matrix(text, matrix)
 
     def decrypt(self, ciphertext: str, key: Key) -> str:
         if not _is_invertible_mod(key["matrix"], MODULUS):
             raise ValueError("hill: matrix not invertible mod 33.")
+        matrix = key["matrix"]
+        text = _normalize_hill_text(ciphertext, field="ciphertext")
+        _ensure_block_multiple(text, block_size=len(matrix), field="ciphertext")
         inv = _inverse_matrix_mod(key["matrix"], MODULUS)
-        return self._apply_matrix(ciphertext.upper(), inv)
+        return self._apply_matrix(text, inv)
 
     @staticmethod
     def _apply_matrix(text: str, matrix: list[list[int]]) -> str:
         n = len(matrix)
-        idx = build_index(RU_33)
         out: list[str] = []
 
         for offset in range(0, len(text), n):
             block = text[offset : offset + n]
-            vec = [_char_to_hill_value(ch, idx) for ch in block]
+            vec = [_char_to_hill_value(ch, ALPHABET_INDEX) for ch in block]
             for row in matrix:
                 total = sum(row[i] * vec[i] for i in range(n)) % MODULUS
                 out.append(_hill_value_to_char(total))
@@ -149,7 +147,21 @@ def _hill_value_to_char(value: int) -> str:
     normalized = value % MODULUS
     if normalized == 0:
         normalized = MODULUS
-    return RU_33[normalized - 1]
+    return ALPHABET[normalized - 1]
+
+
+def _normalize_hill_text(value: str, *, field: str) -> str:
+    text = value.upper()
+    invalid = sorted({ch for ch in text if ch not in ALPHABET_INDEX})
+    if invalid:
+        joined = ", ".join(repr(ch) for ch in invalid)
+        raise ValueError(f"hill: {field} supports only RU_33 letters (the alphabet includes 'Ё'); invalid: {joined}.")
+    return text
+
+
+def _ensure_block_multiple(text: str, *, block_size: int, field: str) -> None:
+    if len(text) % block_size != 0:
+        raise ValueError(f"hill: {field} length ({len(text)}) must be a multiple of matrix size {block_size}.")
 
 
 def get_cipher() -> HillCipher:
