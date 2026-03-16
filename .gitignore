@@ -64,3 +64,4 @@ docs/pdf/*
 *.7z
 .codex_tmp
 tmp/*
+run_project.bat

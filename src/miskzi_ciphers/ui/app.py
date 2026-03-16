@@ -211,6 +211,35 @@ def _pretty_json(obj: dict[str, Any]) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+def _format_table_cell(value: Any) -> Any:
+    if value is None:
+        return ""
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, (list, dict, tuple)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
+def _prepare_description_params(cipher_id: str, params: list[Any]) -> list[dict[str, Any]]:
+    prepared: list[dict[str, Any]] = []
+    for p in params:
+        if not isinstance(p, dict):
+            continue
+        param_name = str(p.get("name", ""))
+        item: dict[str, Any] = {
+            t("Parameter"): label_param(cipher_id, param_name),
+            t("Raw key"): param_name,
+            t("Type"): _format_table_cell(p.get("type", "")),
+            t("Required"): t("Yes") if bool(p.get("required", False)) else t("No"),
+            t("Default"): _format_table_cell(p.get("default", "")),
+            t("Help"): _format_table_cell(_param_help_text(cipher_id, p) or ""),
+            t("Example"): _format_table_cell(p.get("example", "")),
+        }
+        prepared.append(item)
+    return prepared
+
+
 def _param_help_text(cipher_id: str, param: dict[str, Any]) -> str | None:
     name = str(param.get("name", "")).strip()
     if not name:
@@ -242,21 +271,7 @@ def _show_description(cipher_id: str) -> None:
 
     params = desc.get("params", []) or []
     if params:
-        prepared = []
-        for p in params:
-            if not isinstance(p, dict):
-                continue
-            param_name = str(p.get("name", ""))
-            item: dict[str, Any] = {
-                t("Parameter"): label_param(cipher_id, param_name),
-                t("Raw key"): param_name,
-                t("Type"): str(p.get("type", "")),
-                t("Required"): t("Yes") if bool(p.get("required", False)) else t("No"),
-                t("Default"): p.get("default", ""),
-                t("Help"): _param_help_text(cipher_id, p) or "",
-                t("Example"): p.get("example", ""),
-            }
-            prepared.append(item)
+        prepared = _prepare_description_params(cipher_id, params)
         st.table(prepared)
     else:
         st.write(t("No params"))
