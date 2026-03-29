@@ -15,6 +15,7 @@
 - [methodics-mapping.md](methodics-mapping.md) — сопоставление кодовой базы с локальными методичками.
 - [known-issues.md](known-issues.md) — ограничения и спорные места, которые важно знать до правок.
 - [changelog.md](changelog.md) — краткая история последних значимых изменений.
+- [planned-work-checklist.md](planned-work-checklist.md) — рабочий чеклист по этапам выравнивания проекта и дальнейшего развития.
 - [pdf/README.md](pdf/README.md) — правила для локальной папки с PDF-методичками.
 
 ## Рекомендованный порядок чтения

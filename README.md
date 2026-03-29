@@ -4,20 +4,24 @@
 
 ## Что есть в проекте
 
-- реализованные шифры: `adfgvx`, `affine`, `alberti`, `atbash`, `bacon`, `binary_code`, `book_cipher`, `caesar`, `cardano_grille`, `gronsfeld`, `hill`, `litorea`, `magic_square`, `morse`, `polybius`, `ramsey`, `richelieu`, `scytale`, `trisemus`, `vernam`, `vigenere`;
+- реализованные шифры: `adfgvx`, `affine`, `alberti`, `atbash`, `bacon`, `binary_code`, `book_cipher`, `caesar`, `cardano_grille`, `gronsfeld`, `hill`, `litorea`, `magic_square`, `morse`, `polybius`, `ramsey`, `richelieu`, `rubik_2x2`, `scytale`, `trisemus`, `vernam`, `vigenere`;
 - единый интерфейс `describe()/parse_key()/encrypt()/decrypt()` для всех шифров;
 - Streamlit Playground для ручного запуска и проверки roundtrip;
 - Data Manager для редактирования `variants.json` и `meta`;
-- формат учебных данных `variants.json + meta`.
+- формат учебных данных `variants.json + meta`;
+- локальные PDF-методички в `docs/pdf/` для сверки покрытия по практическим занятиям.
 
 ## Быстрый запуск
 
-### 1. Создать окружение
+### 1. Подготовить окружение
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
+
+Если вы используете conda, можно создать и активировать отдельное окружение с Python 3.11 вместо `venv`.
+Проект не требует конкретного имени окружения.
 
 ### 2. Установить проект
 
@@ -37,6 +41,12 @@ python -m streamlit run src/miskzi_ciphers/ui/app.py
 ```bash
 pytest -q
 ```
+
+Текущее состояние тестового контура требует уточнения по среде:
+
+- полный `pytest -q` зависит от корректно доступного временного каталога на Windows;
+- часть тестов сейчас чувствительна к настройкам `TMP`/`TEMP`;
+- перед использованием результата `pytest` как сигнала готовности проверьте актуальные замечания в документации и текущее состояние падений.
 
 ## Структура проекта
 
