@@ -52,6 +52,72 @@
         "group_size": 5
       },
       "expected": "LONDON IS THE CAPITAL OF GB"
+    },
+    {
+      "id": 5,
+      "mode": "encrypt",
+      "text": "I STUDY AT RTU MIREA",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "19406 82839 79456 94468 29496 1435"
+    },
+    {
+      "id": 6,
+      "mode": "encrypt",
+      "text": "TO DO SOMEONE A FAVOUR",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "62948 32940 29632 73945 94925 99282 4"
+    },
+    {
+      "id": 7,
+      "mode": "encrypt",
+      "text": "TO BREAK THE NEWS TO SOMEONE",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "62948 74358 89469 83947 39109 46294 02963 273"
+    },
+    {
+      "id": 8,
+      "mode": "encrypt",
+      "text": "THE FORBIDDEN FRUIT IS ALWAYS THE SWEETEST",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "69839 49224 87183 83379 49248 21694 10945 93915 97094 69839 40913 36306"
+    },
+    {
+      "id": 9,
+      "mode": "encrypt",
+      "text": "TO SAVE A SEAT FOR SOMEONE",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "62940 59939 45940 35694 92249 40296 3273"
+    },
+    {
+      "id": 10,
+      "mode": "encrypt",
+      "text": "TOO MANY COOKS SPOIL THE BROTH",
+      "key": {
+        "keyword_table": "SUBWAY",
+        "anagram": "ASINTOER",
+        "group_size": 5
+      },
+      "expected": "62294 96579 79480 22880 94085 21939 46983 94874 2698"
     }
   ]
 }

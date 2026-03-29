@@ -6,12 +6,12 @@ from miskzi_ciphers.common.types import CipherInfo, Key
 ADFGVX = "ADFGVX"
 # Таблица 24 из методички (фиксированная 6x6).
 GRID_ROWS = [
-    "ABCDEF",
-    "GHIJKL",
-    "MNOPQR",
-    "STUVWX",
-    "YZ0123",
-    "456789",
+    "1JR4HD",
+    "E2AV9M",
+    "8PINKZ",
+    "BYUF6T",
+    "5GXS3O",
+    "WLQ7C0",
 ]
 
 SYMBOL_TO_PAIR: dict[str, str] = {}

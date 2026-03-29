@@ -213,7 +213,7 @@ CIPHER_LABELS: Final[dict[str, dict[str, str]]] = {
         "magic_square": "Магический квадрат",
         "morse": "Азбука Морзе",
         "polybius": "Квадрат Полибия",
-        "ramsey": "Шифр Рамсея",
+        "ramsey": "Шифр Рамзая",
         "richelieu": "Шифр Ришелье",
         "rubik_2x2": "Шифр Рубика 2x2",
         "scytale": "Скитала",
