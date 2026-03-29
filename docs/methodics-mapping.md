@@ -74,6 +74,7 @@
 По извлечённым заголовкам и ключевым фрагментам из локального PDF ПЗ-01 в методичке явно присутствуют:
 
 - `book_cipher`
+- `scytale`
 - `polybius`
 - `magic_square`
 - `caesar`
@@ -82,12 +83,11 @@
 Состояние в коде и данных:
 
 - `book_cipher` реализован, имеет `data/book_cipher/variants.json` и `data/book_cipher/key.txt`;
+- `scytale` реализован и имеет `data/scytale/variants.json`;
 - `polybius` реализован и имеет `data/polybius/variants.json`;
 - `magic_square` реализован и имеет `data/magic_square/variants.json`;
 - `caesar` реализован, имеет `data/caesar/variants.json` и отдельный тест `tests/test_caesar.py`;
 - `atbash` реализован и имеет `data/atbash/variants.json`.
-
-`scytale` реализован в коде и имеет данные, но по текущему автоматическому извлечению из PDF ПЗ-01 его явное упоминание не подтвердилось. Поэтому пока он не привязан здесь жёстко к ПЗ-01.
 
 ## ПЗ-2
 

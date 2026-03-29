@@ -17,8 +17,13 @@
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
 ```
+
+Затем активируйте окружение подходящей для вашей платформы командой:
+
+- Windows PowerShell: `.venv\Scripts\Activate.ps1`
+- Windows cmd: `.venv\Scripts\activate.bat`
+- Linux/macOS: `source .venv/bin/activate`
 
 Если вы используете conda, можно создать и активировать отдельное окружение с Python 3.11 вместо `venv`.
 Проект не требует конкретного имени окружения.
