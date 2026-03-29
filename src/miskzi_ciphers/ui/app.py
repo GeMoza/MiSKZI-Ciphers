@@ -324,6 +324,21 @@ def _sync_key_form_widgets(cipher_id: str, key_obj: dict[str, Any]) -> None:
         _ensure_widget_state(f"pg_key.{cipher_id}.{name}", coerced, force=True)
 
 
+def _sync_data_manager_key_form_widgets(cipher_id: str, ctx: str, key_obj: dict[str, Any]) -> None:
+    desc = service.get_cipher_description(cipher_id)
+    params = desc.get("params", []) if isinstance(desc, dict) else []
+    for p in params or []:
+        if not isinstance(p, dict):
+            continue
+        name = str(p.get("name", "")).strip()
+        if not name:
+            continue
+        fallback_raw = _fallback_raw_value(p)
+        raw_value = key_obj.get(name, fallback_raw)
+        coerced = _coerce_widget_value(p, raw_value, cipher_id=cipher_id, param_name=name)
+        _ensure_widget_state(f"dm.key_form.{ctx}.{name}", coerced, force=True)
+
+
 def _clear_playground_key(cipher_id: str | None = None) -> None:
     st.session_state["pg_key_form_values"] = {}
     st.session_state["pg_key_raw_json"] = ""
@@ -360,13 +375,14 @@ def _show_feedback() -> None:
         st.info(message)
 
 
-def _raw_key_for_callback() -> dict[str, Any] | None:
+def _raw_key_for_callback(cipher_id: str) -> dict[str, Any] | None:
     if st.session_state.get("pg_key_mode", t("Form")) == t("Raw JSON"):
         raw_text = str(st.session_state.get("pg_key_raw_json", "{}"))
         parsed = _parse_raw_json(raw_text)
         if parsed is None:
             return None
         st.session_state["pg_key_form_values"] = dict(parsed)
+        _sync_key_form_widgets(cipher_id, parsed)
         return parsed
 
     values = st.session_state.get("pg_key_form_values", {})
@@ -436,7 +452,7 @@ def _on_reset_playground() -> None:
 
 
 def _on_encrypt(cipher_id: str) -> None:
-    raw_key = _raw_key_for_callback()
+    raw_key = _raw_key_for_callback(cipher_id)
     if raw_key is None:
         return
     try:
@@ -448,7 +464,7 @@ def _on_encrypt(cipher_id: str) -> None:
 
 
 def _on_decrypt(cipher_id: str) -> None:
-    raw_key = _raw_key_for_callback()
+    raw_key = _raw_key_for_callback(cipher_id)
     if raw_key is None:
         return
     try:
@@ -460,7 +476,7 @@ def _on_decrypt(cipher_id: str) -> None:
 
 
 def _on_roundtrip(cipher_id: str) -> None:
-    raw_key = _raw_key_for_callback()
+    raw_key = _raw_key_for_callback(cipher_id)
     if raw_key is None:
         return
     plaintext = str(st.session_state.get("pg_plaintext", ""))
@@ -506,7 +522,7 @@ def _playground() -> None:
         st.text_area(t("Raw key JSON"), key="pg_key_raw_json")
 
     if st.button(t("Parse key"), key="pg_parse"):
-        raw_key = _raw_key_for_callback()
+        raw_key = _raw_key_for_callback(cipher_id)
         if raw_key is None:
             return
         try:
@@ -612,6 +628,13 @@ def _data_manager() -> None:
                 st.error(message)
                 return None
             raw_key_example_obj = parsed
+            try:
+                service.parse_key(cipher_id, raw_key_example_obj)
+            except Exception as e:
+                message = str(e)
+                st.session_state[meta_error_key] = message
+                st.error(message)
+                return None
 
         return {
             "free_text": str(st.session_state.get(meta_free_text_key, "")),
@@ -723,6 +746,7 @@ def _data_manager() -> None:
             st.session_state[key_error] = str(e)
             return
         st.session_state[key_keyobj] = parsed
+        _sync_data_manager_key_form_widgets(cipher_id, ctx, parsed)
 
     vid = st.number_input(t("Identifier"), min_value=1, step=1, key=key_id)
     vmode = st.selectbox(t("Mode"), ["encrypt", "decrypt"], key=key_mode, format_func=_variant_mode_label)
