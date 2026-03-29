@@ -41,7 +41,16 @@ def test_variants_json_schema_and_ids_unique() -> None:
             ids.add(item["id"])
 
             assert item.get("mode") in {"encrypt", "decrypt"}, f"{vf}: items[{i}].mode invalid"
-            assert isinstance(item.get("text"), str), f"{vf}: items[{i}].text must be str"
+            input_mode = item.get("input_mode", "text")
+            assert input_mode in {"text", "layout"}, f"{vf}: items[{i}].input_mode invalid"
+            if input_mode == "layout":
+                assert isinstance(item.get("layout"), dict), f"{vf}: items[{i}].layout must be dict"
+                if "text" in item:
+                    assert isinstance(item["text"], str), f"{vf}: items[{i}].text must be str"
+            else:
+                assert isinstance(item.get("text"), str), f"{vf}: items[{i}].text must be str"
+                if "layout" in item:
+                    assert isinstance(item["layout"], dict), f"{vf}: items[{i}].layout must be dict"
             assert isinstance(item.get("key"), dict), f"{vf}: items[{i}].key must be dict"
 
             if "expected" in item:

@@ -21,6 +21,7 @@ from miskzi_ciphers.common.types import CipherInfo, Key
 FACE_IDS = {1, 2, 3, 4, 5, 6}
 CELL_IDS = ("tl", "tr", "bl", "br")
 ALL_POSITIONS = tuple(f"{face}_{cell}" for face in sorted(FACE_IDS) for cell in CELL_IDS)
+TEXT_BLOCK_SIZE = 8
 
 CONTROL_MOVES = [
     {"face": 1, "direction": "right", "turns": 1},
@@ -145,7 +146,8 @@ class Rubik2x2Cipher:
             "notes": (
                 "Используется учебная развёртка 2x2 из ПЗ-05. Блок имеет фиксированную вместимость 8 русских букв; "
                 "пробелы во входе игнорируются. Текст размещается по трафарету рисунка 21, а шифртекст считывается "
-                "по трафарету рисунка 24. Контрольный пример: 'РТУ МИРЭА' -> 'ТМРРИАЭУ'."
+                "по трафарету рисунка 24. Для методических вариантов 1-5 проект теперь поддерживает отдельный вход "
+                "через layout-раскладку заполненных ячеек развёртки. Контрольный пример: 'РТУ МИРЭА' -> 'ТМРРИАЭУ'."
             ),
         }
 
@@ -188,12 +190,38 @@ class Rubik2x2Cipher:
 
         return {"moves": moves}
 
+    def parse_layout(self, raw_layout: Any) -> dict[str, str]:
+        if not isinstance(raw_layout, dict):
+            raise ValueError("rubik_2x2: layout must be an object mapping positions to letters.")
+
+        layout: dict[str, str] = {}
+        for raw_position, raw_value in raw_layout.items():
+            position = str(raw_position).strip()
+            if position not in ALL_POSITIONS:
+                raise ValueError(f"rubik_2x2: layout position {position!r} is unknown.")
+
+            value = as_str(raw_value, f"layout[{position}]").strip().upper()
+            if len(value) != 1 or value not in RU_33:
+                raise ValueError(f"rubik_2x2: layout[{position}] must be one RU_33 letter.")
+            layout[position] = value
+
+        if len(layout) != TEXT_BLOCK_SIZE:
+            raise ValueError("rubik_2x2: layout must contain exactly 8 occupied cells.")
+        return layout
+
     def encrypt(self, plaintext: str, key: Key) -> str:
         letters = self._normalize_plaintext(plaintext)
         state = self._empty_state()
         for position, letter in zip(INPUT_STENCIL, letters):
             state[position] = letter
 
+        transformed = self._apply_moves(state, key["moves"])
+        return "".join(transformed[position] for position in OUTPUT_STENCIL)
+
+    def encrypt_layout(self, layout: dict[str, str], key: Key) -> str:
+        normalized_layout = self.parse_layout(layout)
+        state = self._empty_state()
+        state.update(normalized_layout)
         transformed = self._apply_moves(state, key["moves"])
         return "".join(transformed[position] for position in OUTPUT_STENCIL)
 

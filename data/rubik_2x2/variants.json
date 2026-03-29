@@ -1,7 +1,7 @@
 {
   "meta": {
     "free_text": "РТУ МИРЭА",
-    "notes": "Контрольный пример берётся из ПЗ-05: исходный текст размещается по рисунку 21, затем применяются ходы 1R, 3R, 4R2, а результат считывается по рисунку 24. Дополнительный вектор с текстом 'АБВ ГДЕЁЖ' — служебный roundtrip-пример проекта, а не отдельный контрольный пример методички.",
+    "notes": "Контрольный пример берётся из ПЗ-05: исходный текст размещается по рисунку 21, затем применяются ходы 1R, 3R, 4R2, а результат считывается по рисунку 24. Для подтверждённых методических вариантов 1-3 проект теперь поддерживает отдельный input_mode=layout с явной раскладкой занятых клеток развёртки.",
     "raw_key_example": {
       "moves": [
         {
@@ -25,35 +25,60 @@
   "items": [
     {
       "id": 1,
+      "input_mode": "layout",
       "mode": "encrypt",
-      "text": "РТУ МИРЭА",
+      "layout": {
+        "1_tl": "М",
+        "1_br": "О",
+        "2_bl": "О",
+        "2_br": "Р",
+        "3_tl": "А",
+        "3_br": "Т",
+        "5_br": "В",
+        "6_tl": "П"
+      },
       "key": {
         "moves": [
           {
-            "face": 1,
-            "direction": "right",
-            "turns": 1
-          },
-          {
-            "face": 3,
+            "face": 2,
             "direction": "right",
             "turns": 1
           },
           {
             "face": 4,
-            "direction": "right",
+            "direction": "left",
             "turns": 2
+          },
+          {
+            "face": 5,
+            "direction": "right",
+            "turns": 1
           }
         ]
       },
-      "expected": "ТМРРИАЭУ"
+      "expected": "МОАОРТВП"
     },
     {
       "id": 2,
-      "mode": "decrypt",
-      "text": "ТМРРИАЭУ",
+      "input_mode": "layout",
+      "mode": "encrypt",
+      "layout": {
+        "1_tr": "В",
+        "1_bl": "Н",
+        "2_br": "Е",
+        "3_tr": "О",
+        "4_br": "Т",
+        "5_br": "И",
+        "6_br": "Е",
+        "6_bl": "Р"
+      },
       "key": {
         "moves": [
+          {
+            "face": 5,
+            "direction": "left",
+            "turns": 2
+          },
           {
             "face": 1,
             "direction": "right",
@@ -63,40 +88,45 @@
             "face": 3,
             "direction": "right",
             "turns": 1
-          },
-          {
-            "face": 4,
-            "direction": "right",
-            "turns": 2
           }
         ]
       },
-      "expected": "РТУ МИРЭА"
+      "expected": "ВНОЕТИЕР"
     },
     {
       "id": 3,
+      "input_mode": "layout",
       "mode": "encrypt",
-      "text": "АБВ ГДЕЁЖ",
+      "layout": {
+        "1_tl": "Б",
+        "1_tr": "Р",
+        "2_tr": "О",
+        "3_tr": "И",
+        "4_tl": "Н",
+        "4_tr": "О",
+        "5_br": "О",
+        "6_br": "Д"
+      },
       "key": {
         "moves": [
+          {
+            "face": 2,
+            "direction": "left",
+            "turns": 1
+          },
+          {
+            "face": 5,
+            "direction": "right",
+            "turns": 2
+          },
           {
             "face": 1,
             "direction": "right",
             "turns": 1
-          },
-          {
-            "face": 3,
-            "direction": "right",
-            "turns": 1
-          },
-          {
-            "face": 4,
-            "direction": "right",
-            "turns": 2
           }
         ]
       },
-      "expected": "БГЕАДЖЁВ"
+      "expected": "БРОИНООД"
     }
   ]
 }

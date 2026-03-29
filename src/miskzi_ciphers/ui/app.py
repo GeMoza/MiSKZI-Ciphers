@@ -38,6 +38,8 @@ def _init_playground_state() -> None:
     st.session_state.setdefault("pg_loaded_source_type", None)
     st.session_state.setdefault("pg_loaded_variant_id", None)
     st.session_state.setdefault("pg_loaded_cipher_id", None)
+    st.session_state.setdefault("pg_loaded_variant_item", None)
+    st.session_state.setdefault("pg_layout_json", "")
 
 
 def _init_ui_cipher_state(ciphers: list[str]) -> str:
@@ -291,17 +293,29 @@ def _load_variant_into_playground(item: dict[str, Any]) -> None:
 
     st.session_state["pg_key_form_values"] = dict(key_obj)
     st.session_state["pg_key_raw_json"] = json.dumps(key_obj, ensure_ascii=False, indent=2)
+    st.session_state["pg_loaded_variant_item"] = json.loads(json.dumps(item, ensure_ascii=False))
 
+    input_mode = str(item.get("input_mode", "text"))
     mode = item.get("mode")
-    text = str(item.get("text", ""))
-    if mode == "encrypt":
-        st.session_state["pg_plaintext"] = text
+    if input_mode == "layout":
+        layout_obj = item.get("layout", {})
+        if not isinstance(layout_obj, dict):
+            layout_obj = {}
+        st.session_state["pg_layout_json"] = _pretty_json(layout_obj)
+        st.session_state["pg_plaintext"] = ""
         st.session_state["pg_ciphertext"] = ""
         st.session_state["pg_decrypted"] = ""
-    elif mode == "decrypt":
-        st.session_state["pg_ciphertext"] = text
-        st.session_state["pg_plaintext"] = ""
-        st.session_state["pg_decrypted"] = ""
+    else:
+        st.session_state["pg_layout_json"] = ""
+        text = str(item.get("text", ""))
+        if mode == "encrypt":
+            st.session_state["pg_plaintext"] = text
+            st.session_state["pg_ciphertext"] = ""
+            st.session_state["pg_decrypted"] = ""
+        elif mode == "decrypt":
+            st.session_state["pg_ciphertext"] = text
+            st.session_state["pg_plaintext"] = ""
+            st.session_state["pg_decrypted"] = ""
 
     st.session_state["pg_feedback"] = (
         "info",
@@ -432,6 +446,8 @@ def _on_load_free_text(cipher_id: str) -> None:
     st.session_state["pg_loaded_source_type"] = "free_text"
     st.session_state["pg_loaded_variant_id"] = None
     st.session_state["pg_loaded_cipher_id"] = cipher_id
+    st.session_state["pg_loaded_variant_item"] = None
+    st.session_state["pg_layout_json"] = ""
 
     message = f"{t('Loaded free_text')}. {t('Read-only: does not modify saved data')}"
     if isinstance(raw_key_example, dict) and raw_key_example:
@@ -448,6 +464,8 @@ def _on_reset_playground() -> None:
     st.session_state["pg_loaded_source_type"] = None
     st.session_state["pg_loaded_variant_id"] = None
     st.session_state["pg_loaded_cipher_id"] = None
+    st.session_state["pg_loaded_variant_item"] = None
+    st.session_state["pg_layout_json"] = ""
     _set_feedback("info", t("Playground reset"))
 
 
@@ -455,6 +473,26 @@ def _on_encrypt(cipher_id: str) -> None:
     raw_key = _raw_key_for_callback(cipher_id)
     if raw_key is None:
         return
+
+    loaded_layout_item = _loaded_layout_variant_for_cipher(cipher_id)
+    if loaded_layout_item is not None:
+        variant_item = dict(loaded_layout_item)
+        variant_item["key"] = dict(raw_key)
+        try:
+            out = service.run_variant(cipher_id, variant_item)
+            st.session_state["pg_ciphertext"] = out
+            expected = variant_item.get("expected")
+            if isinstance(expected, str) and expected:
+                if out == expected:
+                    _set_feedback("success", t("expected match"))
+                else:
+                    _set_feedback("error", f"{t('expected mismatch')}\nExpected: {expected}\nGot: {out}")
+            else:
+                _set_feedback("success", t("Encrypted"))
+        except Exception as e:
+            _set_feedback("error", str(e))
+        return
+
     try:
         out = service.encrypt(cipher_id, str(st.session_state.get("pg_plaintext", "")), raw_key)
         st.session_state["pg_ciphertext"] = out
@@ -548,6 +586,14 @@ def _playground() -> None:
             st.info(t("No variants"))
     elif source == t("Free text"):
         st.button(t("Load free_text"), key="pg_load_free_text", on_click=_on_load_free_text, args=(cipher_id,))
+
+    loaded_layout_item = _loaded_layout_variant_for_cipher(cipher_id)
+    if loaded_layout_item is not None:
+        st.subheader(t("Loaded layout"))
+        st.code(str(st.session_state.get("pg_layout_json", "{}")), language="json")
+        expected = loaded_layout_item.get("expected")
+        if isinstance(expected, str) and expected:
+            st.write(f"**{t('Expected optional')}:** {expected}")
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -653,7 +699,7 @@ def _data_manager() -> None:
                 "meta": meta_payload,
                 "items": [dict(x) for x in items if isinstance(x, dict)],
             }
-            errors = service.validate_variants_obj(payload)
+            errors = service.validate_variants_for_cipher(cipher_id, payload)
             if errors:
                 st.error(t("Validation errors"))
                 for err in errors:
@@ -668,7 +714,15 @@ def _data_manager() -> None:
     options = [f"id={it.get('id')}" for it in items if isinstance(it, dict) and "id" in it]
     select_mode = st.radio(t("Edit variant"), [t("Edit existing"), t("Add new")], horizontal=True, key=f"dm.select_mode.{cipher_id}")
 
-    current: dict[str, Any] = {"id": 1, "mode": "encrypt", "text": "", "key": {}, "expected": ""}
+    current: dict[str, Any] = {
+        "id": 1,
+        "mode": "encrypt",
+        "input_mode": "text",
+        "text": "",
+        "layout": {},
+        "key": {},
+        "expected": "",
+    }
 
     selected_id_or_new = "new"
     if select_mode == t("Edit existing"):
@@ -681,8 +735,10 @@ def _data_manager() -> None:
                 current = {
                     "id": int(found.get("id", 1)),
                     "mode": str(found.get("mode", "encrypt")),
+                    "input_mode": str(found.get("input_mode", "text")),
                     "text": str(found.get("text", "")),
-                    "key": dict(found.get("key", {})),
+                    "layout": dict(found.get("layout", {})) if isinstance(found.get("layout"), dict) else {},
+                    "key": dict(found.get("key", {})) if isinstance(found.get("key"), dict) else {},
                     "expected": "" if "expected" not in found else str(found.get("expected", "")),
                 }
         else:
@@ -697,7 +753,9 @@ def _data_manager() -> None:
 
     key_id = f"dm.id.{ctx}"
     key_mode = f"dm.mode.{ctx}"
+    key_variant_input_mode = f"dm.input_mode.{ctx}"
     key_text = f"dm.text.{ctx}"
+    key_layout_json = f"dm.layout_json.{ctx}"
     key_keyobj = f"dm.key_obj.{ctx}"
     key_keyjson = f"dm.key_json_text.{ctx}"
     key_keymode = f"dm.key_mode.{ctx}"
@@ -705,13 +763,18 @@ def _data_manager() -> None:
     key_error = f"dm.error.{ctx}"
 
     raw_key = current["key"] if isinstance(current.get("key"), dict) else {}
+    raw_layout = current["layout"] if isinstance(current.get("layout"), dict) else {}
 
     if key_id not in st.session_state:
         st.session_state[key_id] = int(current["id"])
     if key_mode not in st.session_state:
         st.session_state[key_mode] = str(current["mode"])
+    if key_variant_input_mode not in st.session_state:
+        st.session_state[key_variant_input_mode] = str(current["input_mode"])
     if key_text not in st.session_state:
         st.session_state[key_text] = str(current["text"])
+    if key_layout_json not in st.session_state:
+        st.session_state[key_layout_json] = _pretty_json(raw_layout)
     if key_keyobj not in st.session_state:
         st.session_state[key_keyobj] = json.loads(json.dumps(raw_key, ensure_ascii=False))
     if key_keyjson not in st.session_state:
@@ -748,9 +811,50 @@ def _data_manager() -> None:
         st.session_state[key_keyobj] = parsed
         _sync_data_manager_key_form_widgets(cipher_id, ctx, parsed)
 
+    def _parse_layout_payload() -> dict[str, Any] | None:
+        try:
+            parsed = json.loads(str(st.session_state.get(key_layout_json, "")) or "{}")
+        except json.JSONDecodeError as e:
+            st.session_state[key_error] = f"{t('JSON error')}: {e}"
+            return None
+        if not isinstance(parsed, dict):
+            st.session_state[key_error] = t("Layout JSON must be an object")
+            return None
+        if cipher_id == "rubik_2x2":
+            parse_layout = getattr(service.get_cipher(cipher_id), "parse_layout", None)
+            if callable(parse_layout):
+                try:
+                    return parse_layout(parsed)
+                except Exception as e:
+                    st.session_state[key_error] = str(e)
+                    return None
+        return parsed
+
     vid = st.number_input(t("Identifier"), min_value=1, step=1, key=key_id)
-    vmode = st.selectbox(t("Mode"), ["encrypt", "decrypt"], key=key_mode, format_func=_variant_mode_label)
-    vtext = st.text_area(t("Text"), key=key_text)
+
+    variant_input_mode = "text"
+    if cipher_id == "rubik_2x2":
+        input_modes = ["text", "layout"]
+        current_input_mode = st.session_state.get(key_variant_input_mode, "text")
+        input_mode_index = input_modes.index(current_input_mode) if current_input_mode in input_modes else 0
+        variant_input_mode = st.selectbox(t("Input mode"), input_modes, index=input_mode_index, key=key_variant_input_mode)
+    else:
+        st.session_state[key_variant_input_mode] = "text"
+
+    mode_options = ["encrypt", "decrypt"]
+    if cipher_id == "rubik_2x2" and variant_input_mode == "layout":
+        mode_options = ["encrypt"]
+    current_variant_mode = st.session_state.get(key_mode, "encrypt")
+    if current_variant_mode not in mode_options:
+        st.session_state[key_mode] = mode_options[0]
+    vmode = st.selectbox(t("Mode"), mode_options, key=key_mode, format_func=_variant_mode_label)
+
+    if variant_input_mode == "layout":
+        st.text_area(t("Layout JSON object"), key=key_layout_json, height=220)
+        vtext = ""
+    else:
+        vtext = st.text_area(t("Text"), key=key_text)
+
     key_modes = [t("Form"), t("Raw JSON")]
     current_mode = st.session_state.get(key_keymode, t("Form"))
     mode_index = key_modes.index(current_mode) if current_mode in key_modes else 0
@@ -845,9 +949,16 @@ def _data_manager() -> None:
             row: dict[str, Any] = {
                 "id": int(vid),
                 "mode": vmode,
-                "text": vtext,
+                "input_mode": variant_input_mode,
                 "key": save_key_obj,
             }
+            if variant_input_mode == "layout":
+                layout_payload = _parse_layout_payload()
+                if layout_payload is None:
+                    return
+                row["layout"] = layout_payload
+            else:
+                row["text"] = vtext
             if vexpected.strip():
                 row["expected"] = vexpected
 
@@ -861,7 +972,7 @@ def _data_manager() -> None:
                 updated.append(row)
 
             payload = {"meta": meta, "items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
-            errors = service.validate_variants_obj(payload)
+            errors = service.validate_variants_for_cipher(cipher_id, payload)
             if errors:
                 st.error(t("Validation errors"))
                 for err in errors:
@@ -873,7 +984,7 @@ def _data_manager() -> None:
         if st.button(t("Delete"), key="dm_delete"):
             updated = [dict(x) for x in items if isinstance(x, dict) and x.get("id") != int(vid)]
             payload = {"meta": meta, "items": sorted(updated, key=lambda x: int(x.get("id", 0)))}
-            errors = service.validate_variants_obj(payload)
+            errors = service.validate_variants_for_cipher(cipher_id, payload)
             if errors:
                 st.error(t("Validation errors"))
                 for err in errors:
@@ -885,7 +996,9 @@ def _data_manager() -> None:
         if st.button(t("Reset form"), key=f"dm_reset.{ctx}"):
             st.session_state.pop(key_id, None)
             st.session_state.pop(key_mode, None)
+            st.session_state.pop(key_variant_input_mode, None)
             st.session_state.pop(key_text, None)
+            st.session_state.pop(key_layout_json, None)
             st.session_state.pop(key_keyobj, None)
             st.session_state.pop(key_keyjson, None)
             st.session_state.pop(key_keymode, None)
@@ -927,11 +1040,22 @@ def _data_manager() -> None:
                         st.error(str(e))
                         return
 
+                row: dict[str, Any] = {
+                    "id": int(vid),
+                    "mode": vmode,
+                    "input_mode": variant_input_mode,
+                    "key": run_key_obj,
+                }
+                if variant_input_mode == "layout":
+                    layout_payload = _parse_layout_payload()
+                    if layout_payload is None:
+                        return
+                    row["layout"] = layout_payload
+                else:
+                    row["text"] = vtext
+
                 try:
-                    if vmode == "encrypt":
-                        result = service.encrypt(cipher_id, vtext, run_key_obj)
-                    else:
-                        result = service.decrypt(cipher_id, vtext, run_key_obj)
+                    result = service.run_variant(cipher_id, row)
                     st.write(t("Result"))
                     st.code(result)
                     if vexpected.strip():

@@ -9,6 +9,11 @@ from miskzi_ciphers.common.registry import REGISTRY
 from miskzi_ciphers.common.types import Cipher
 
 
+TEXT_INPUT_MODE = "text"
+LAYOUT_INPUT_MODE = "layout"
+SUPPORTED_INPUT_MODES = {TEXT_INPUT_MODE, LAYOUT_INPUT_MODE}
+
+
 def list_ciphers() -> list[str]:
     return REGISTRY.list_names()
 
@@ -107,7 +112,6 @@ def save_variants(cipher_id: str, obj: dict[str, Any]) -> None:
     normalized = _normalize_variants_root(obj)
     path.write_text(json.dumps(normalized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-
 def load_free_text(cipher_id: str) -> str:
     meta = load_meta(cipher_id)
     free_text = meta.get("free_text", "")
@@ -120,6 +124,46 @@ def save_free_text(cipher_id: str, text: str) -> None:
     meta["free_text"] = text
     variants["meta"] = meta
     save_variants(cipher_id, variants)
+
+
+def _item_input_mode(item: dict[str, Any]) -> str:
+    raw_mode = item.get("input_mode", TEXT_INPUT_MODE)
+    return str(raw_mode)
+
+
+def run_variant(cipher_id: str, item: dict[str, Any]) -> str:
+    if not isinstance(item, dict):
+        raise ValueError("variant item must be object")
+
+    mode = str(item.get("mode", ""))
+    input_mode = _item_input_mode(item)
+    if input_mode not in SUPPORTED_INPUT_MODES:
+        raise ValueError(f"variant input_mode must be one of {sorted(SUPPORTED_INPUT_MODES)}")
+
+    key_raw = item.get("key", {})
+    if not isinstance(key_raw, dict):
+        raise ValueError("variant key must be object")
+    key = parse_key(cipher_id, key_raw)
+    cipher = get_cipher(cipher_id)
+
+    if cipher_id == "rubik_2x2" and input_mode == LAYOUT_INPUT_MODE:
+        parse_layout = getattr(cipher, "parse_layout", None)
+        encrypt_layout = getattr(cipher, "encrypt_layout", None)
+        if not callable(parse_layout) or not callable(encrypt_layout):
+            raise ValueError("rubik_2x2: layout variants are not supported by current cipher implementation")
+        if mode != "encrypt":
+            raise ValueError("rubik_2x2: layout variants currently support only encrypt mode")
+        layout = parse_layout(item.get("layout", {}))
+        return encrypt_layout(layout, key)
+
+    text = item.get("text")
+    if not isinstance(text, str):
+        raise ValueError("variant text must be str")
+    if mode == "encrypt":
+        return cipher.encrypt(text, key)
+    if mode == "decrypt":
+        return cipher.decrypt(text, key)
+    raise ValueError("variant mode invalid")
 
 
 def validate_variants_obj(obj: dict[str, Any]) -> list[str]:
@@ -166,13 +210,51 @@ def validate_variants_obj(obj: dict[str, Any]) -> list[str]:
         if item.get("mode") not in {"encrypt", "decrypt"}:
             errors.append(f"{prefix}.mode invalid")
 
-        if not isinstance(item.get("text"), str):
-            errors.append(f"{prefix}.text must be str")
+        input_mode = _item_input_mode(item)
+        if input_mode not in SUPPORTED_INPUT_MODES:
+            errors.append(f"{prefix}.input_mode invalid")
+        elif input_mode == TEXT_INPUT_MODE:
+            if not isinstance(item.get("text"), str):
+                errors.append(f"{prefix}.text must be str")
+            if "layout" in item and not isinstance(item["layout"], dict):
+                errors.append(f"{prefix}.layout must be dict")
+        else:
+            if not isinstance(item.get("layout"), dict):
+                errors.append(f"{prefix}.layout must be dict")
+            if "text" in item and not isinstance(item["text"], str):
+                errors.append(f"{prefix}.text must be str")
 
         if not isinstance(item.get("key"), dict):
             errors.append(f"{prefix}.key must be dict")
 
         if "expected" in item and not isinstance(item["expected"], str):
             errors.append(f"{prefix}.expected must be str")
+
+    return errors
+
+
+def validate_variants_for_cipher(cipher_id: str, obj: dict[str, Any]) -> list[str]:
+    errors = validate_variants_obj(obj)
+    items = obj.get("items", []) if isinstance(obj, dict) else []
+    if not isinstance(items, list):
+        return errors
+
+    if cipher_id != "rubik_2x2":
+        return errors
+
+    cipher = get_cipher(cipher_id)
+    parse_layout = getattr(cipher, "parse_layout", None)
+    if not callable(parse_layout):
+        return errors
+
+    for i, item in enumerate(items):
+        if not isinstance(item, dict):
+            continue
+        if _item_input_mode(item) != LAYOUT_INPUT_MODE:
+            continue
+        try:
+            parse_layout(item.get("layout", {}))
+        except Exception as exc:
+            errors.append(f"items[{i}].layout invalid: {exc}")
 
     return errors
