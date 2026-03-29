@@ -76,5 +76,5 @@ def test_hill_rejects_non_ru33_symbols_with_explicit_error() -> None:
     cipher = load_cipher("hill")
     key = cipher.parse_key({"matrix": [[1, 2], [3, 5]]})
 
-    with pytest.raises(ValueError, match=r"hill: plaintext supports only RU_33 letters \(the alphabet includes 'Ё'\); invalid: '\\?'\\."):
+    with pytest.raises(ValueError, match=r"hill: plaintext supports only RU_33 letters \(the alphabet includes 'Ё'\); invalid: '\?'\."):
         cipher.encrypt("?", key)

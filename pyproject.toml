@@ -41,7 +41,7 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.pytest.ini_options]
-addopts = "-ra -q"
+addopts = "-ra -q -p no:cacheprovider"
 testpaths = ["tests"]
 
 [tool.ruff]

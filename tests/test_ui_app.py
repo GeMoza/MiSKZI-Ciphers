@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from miskzi_ciphers.app import service
 from miskzi_ciphers.ui.app import _prepare_description_params
+from miskzi_ciphers.ui.i18n import t
 
 
 def test_prepare_description_params_serializes_complex_values() -> None:
@@ -9,8 +10,8 @@ def test_prepare_description_params_serializes_complex_values() -> None:
 
     prepared = _prepare_description_params("hill", desc.get("params", []))
 
-    matrix_row = next(row for row in prepared if row["Raw key"] == "matrix")
-    assert matrix_row["Example"] == "[[1, 2], [3, 5]]"
+    matrix_row = next(row for row in prepared if row[t("Raw key")] == "matrix")
+    assert matrix_row[t("Example")] == "[[1, 2], [3, 5]]"
     assert all(not isinstance(value, (list, dict, tuple)) for row in prepared for value in row.values())
 
 
