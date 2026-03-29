@@ -5,7 +5,12 @@ import json
 import streamlit as st
 
 from miskzi_ciphers.app import service
-from miskzi_ciphers.ui.app import _prepare_description_params, _raw_key_for_callback, _sync_data_manager_key_form_widgets
+from miskzi_ciphers.ui.app import (
+    _loaded_layout_variant_for_cipher,
+    _prepare_description_params,
+    _raw_key_for_callback,
+    _sync_data_manager_key_form_widgets,
+)
 from miskzi_ciphers.ui.i18n import t
 
 
@@ -53,3 +58,21 @@ def test_sync_data_manager_key_form_widgets_forces_widget_state_update() -> None
 
     assert st.session_state[f"dm.key_form.{ctx}.matrix"] == "[[1, 2], [3, 5]]"
     assert st.session_state[f"dm.key_form.{ctx}.pad_char"] == "Б"
+
+
+def test_loaded_layout_variant_for_cipher_returns_only_matching_layout_item() -> None:
+    st.session_state.clear()
+    layout_item = {
+        "id": 1,
+        "input_mode": "layout",
+        "layout": {"1_tl": "М"},
+        "key": {"moves": []},
+    }
+    st.session_state["pg_loaded_cipher_id"] = "rubik_2x2"
+    st.session_state["pg_loaded_variant_item"] = layout_item
+
+    assert _loaded_layout_variant_for_cipher("rubik_2x2") == layout_item
+    assert _loaded_layout_variant_for_cipher("hill") is None
+
+    st.session_state["pg_loaded_variant_item"] = {"id": 2, "input_mode": "text", "text": "ABC"}
+    assert _loaded_layout_variant_for_cipher("rubik_2x2") is None

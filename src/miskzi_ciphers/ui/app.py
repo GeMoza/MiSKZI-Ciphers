@@ -323,6 +323,21 @@ def _load_variant_into_playground(item: dict[str, Any]) -> None:
     )
 
 
+def _loaded_layout_variant_for_cipher(cipher_id: str) -> dict[str, Any] | None:
+    loaded_cipher_id = st.session_state.get("pg_loaded_cipher_id")
+    if loaded_cipher_id != cipher_id:
+        return None
+
+    item = st.session_state.get("pg_loaded_variant_item")
+    if not isinstance(item, dict):
+        return None
+
+    if str(item.get("input_mode", "text")) != "layout":
+        return None
+
+    return item
+
+
 def _sync_key_form_widgets(cipher_id: str, key_obj: dict[str, Any]) -> None:
     desc = service.get_cipher_description(cipher_id)
     params = desc.get("params", []) if isinstance(desc, dict) else []
