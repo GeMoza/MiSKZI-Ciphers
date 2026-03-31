@@ -11,7 +11,18 @@ from miskzi_ciphers.common.registry import REGISTRY, load_cipher
 
 
 RSA_CONTROL_KEY = {"p": 17, "q": 23, "e": 3}
-ELGAMAL_CONTROL_KEY = {"p": 11, "g": 2, "x": 9, "k": 7}
+ELGAMAL_CONTROL_VARIANTS = [
+    ({"p": 17, "g": 3, "x": 5, "k": 11}, "9", 5, "7,14"),
+    ({"p": 19, "g": 2, "x": 7, "k": 5}, "11", 14, "13,15"),
+    ({"p": 23, "g": 5, "x": 9, "k": 7}, "14", 11, "17,6"),
+    ({"p": 29, "g": 2, "x": 11, "k": 9}, "17", 18, "19,24"),
+    ({"p": 31, "g": 3, "x": 8, "k": 11}, "19", 20, "13,9"),
+    ({"p": 37, "g": 2, "x": 13, "k": 5}, "21", 15, "32,23"),
+    ({"p": 41, "g": 6, "x": 17, "k": 9}, "24", 26, "19,39"),
+    ({"p": 43, "g": 3, "x": 14, "k": 5}, "26", 36, "28,27"),
+    ({"p": 47, "g": 5, "x": 19, "k": 7}, "29", 10, "11,36"),
+    ({"p": 53, "g": 2, "x": 21, "k": 11}, "31", 48, "34,16"),
+]
 
 
 def _variants(cipher_id: str) -> dict[str, object]:
@@ -75,9 +86,9 @@ def test_rsa_supports_multiple_decimal_tokens() -> None:
 def test_elgamal_parse_key_computes_y() -> None:
     cipher = load_cipher("elgamal")
 
-    parsed = cipher.parse_key({"p": "11", "g": "2", "x": "9", "k": "7"})
+    parsed = cipher.parse_key({"p": "17", "g": "3", "x": "5", "k": "11"})
 
-    assert parsed == {"p": 11, "g": 2, "x": 9, "k": 7, "y": 6}
+    assert parsed == {"p": 17, "g": 3, "x": 5, "k": 11, "y": 5}
 
 
 def test_elgamal_parse_key_accepts_primitive_root_generator() -> None:
@@ -95,6 +106,7 @@ def test_elgamal_parse_key_accepts_primitive_root_generator() -> None:
         ({"p": 11, "g": 11, "x": 9, "k": 7}, r"1 < g < p"),
         ({"p": 11, "g": 3, "x": 9, "k": 7}, "primitive root"),
         ({"p": 11, "g": 2, "x": 1, "k": 7}, r"1 < x < p"),
+        ({"p": 11, "g": 2, "x": 9, "k": 10}, r"1 < k < p-1"),
         ({"p": 11, "g": 2, "x": 9, "k": 5}, "coprime"),
         ({"extra": 1}, "Unknown key"),
     ],
@@ -106,23 +118,21 @@ def test_elgamal_parse_key_rejects_invalid_input(raw_key: dict[str, object], mes
         cipher.parse_key(raw_key)
 
 
-def test_elgamal_matches_methodical_example_and_verifies_decryption() -> None:
+@pytest.mark.parametrize(("raw_key", "message", "expected_y", "expected_ciphertext"), ELGAMAL_CONTROL_VARIANTS)
+def test_elgamal_project_control_variants_compute_y_encrypt_and_decrypt(
+    raw_key: dict[str, int],
+    message: str,
+    expected_y: int,
+    expected_ciphertext: str,
+) -> None:
     cipher = load_cipher("elgamal")
-    key = cipher.parse_key(ELGAMAL_CONTROL_KEY)
+    key = cipher.parse_key(raw_key)
 
-    assert key["y"] == 6
-    assert cipher.encrypt("4", key) == "7,10"
-    assert cipher.decrypt("7,10", key) == "4"
-    assert cipher.decrypt("(7, 10)", key) == "4"
-
-
-def test_elgamal_matches_methodical_variant_1() -> None:
-    cipher = load_cipher("elgamal")
-    key = cipher.parse_key({"p": 17, "g": 7, "x": 11, "k": 13})
-
-    assert key["y"] == 14
-    assert cipher.encrypt("10", key) == "6,16"
-    assert cipher.decrypt("6,16", key) == "10"
+    assert key["y"] == expected_y
+    assert cipher.encrypt(message, key) == expected_ciphertext
+    assert cipher.decrypt(expected_ciphertext, key) == message
+    left, right = expected_ciphertext.split(",")
+    assert cipher.decrypt(f"({left}, {right})", key) == message
 
 
 def test_rsa_variants_file_passes_existing_validation_flow() -> None:
@@ -149,13 +159,20 @@ def test_rsa_variants_match_control_vectors() -> None:
     assert items[4]["expected"] == "42 123 314"
 
 
-def test_elgamal_variants_match_methodics_vectors() -> None:
+def test_elgamal_variants_match_project_control_vectors() -> None:
     variants = _variants("elgamal")
     items = {entry["id"]: entry for entry in variants["items"] if isinstance(entry, dict) and "id" in entry}
 
-    assert items[1]["expected"] == "7,10"
-    assert items[2]["expected"] == "4"
-    assert items[3]["expected"] == "6,16"
-    assert items[4]["expected"] == "10"
-    assert items[5]["expected"] == "4,9"
-    assert items[6]["expected"] == "13"
+    assert len(items) == 20
+    for offset, (raw_key, message, expected_y, expected_ciphertext) in enumerate(ELGAMAL_CONTROL_VARIANTS):
+        encrypt_item = items[offset * 2 + 1]
+        decrypt_item = items[offset * 2 + 2]
+
+        assert encrypt_item["key"] == raw_key
+        assert encrypt_item["text"] == message
+        assert encrypt_item["expected"] == expected_ciphertext
+
+        assert decrypt_item["key"] == raw_key
+        assert decrypt_item["text"] == expected_ciphertext
+        assert decrypt_item["expected"] == message
+        assert pow(raw_key["g"], raw_key["x"], raw_key["p"]) == expected_y

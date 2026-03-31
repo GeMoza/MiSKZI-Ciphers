@@ -31,7 +31,7 @@
 | `book_cipher` | yes | yes | no | yes | yes |  |
 | `caesar` | yes | yes | yes | yes | yes | Фиксированные векторы есть в `tests/test_caesar.py`; реализация работает по `RU_33`. |
 | `cardano_grille` | yes | yes | no | yes | yes | Есть roundtrip/prefix-тест, но без фиксированного ожидаемого шифротекста; используется учебная маска из проекта. |
-| `elgamal` | yes | yes | yes | yes | yes | Реализована учебная схема из ПЗ-06; `parse_key()` вычисляет y, а векторы зафиксированы в `tests/test_pz6_public_key_vectors.py`. |
+| `elgamal` | yes | yes | yes | yes | yes | Реализована учебная схема из ПЗ-06; `parse_key()` вычисляет y и проверяет primitive root condition. Доступная таблица вариантов ПЗ-06 внутренне противоречит собственным условиям схемы, поэтому проект использует собственный валидный project control set, а не пытается угадывать исправления исходных данных. |
 | `feistel_network` | yes | yes | yes | yes | yes | Реализована учебная 4-раундовая схема из ПЗ-07; шифротекст хранится как 4 десятичных байта, а пример/варианты совпадают только при нумерации русского алфавита без `Ё`. |
 | `gronsfeld` | yes | yes | no | yes | yes | Есть только roundtrip в `tests/test_pz3_vectors.py`; реализация работает по русскому алфавиту. |
 | `hill` | yes | yes | yes | yes | yes | Методически относится к ПЗ-5, но фиксированный вектор живёт в `tests/test_pz4_vectors.py`; используется mod 33 и `RU_33` с `Ё`. |
