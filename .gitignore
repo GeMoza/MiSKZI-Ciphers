@@ -58,7 +58,9 @@ Thumbs.db
 
 # Local PDF methodics
 docs/pdf/*
+docs/external-materials/*
 !docs/pdf/README.md
+!docs/external-materials/README.md
 
 *.zip
 *.7z
