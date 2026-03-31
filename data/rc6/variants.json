@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "free_text": "ЛЕТО",
+    "notes": "Контрольный пример и варианты взяты из локальной ПЗ-07. Методичка показывает буквенный шифротекст после обнуления старших 3 бит каждого байта, но для проекта используется обратимый raw-формат из 4 hex-байтов. Варианты 1-10 даны как сообщение, ключ и циклический сдвиг; expected в data получен прямым вычислением по той же учебной схеме ПЗ-07.",
+    "raw_key_example": {
+      "keyword": "КНИГА",
+      "shift": 1
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "mode": "encrypt",
+      "text": "ЛЕТО",
+      "key": {
+        "keyword": "КНИГА",
+        "shift": 1
+      },
+      "expected": "12 0E 1F D4"
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "12 0E 1F D4",
+      "key": {
+        "keyword": "КНИГА",
+        "shift": 1
+      },
+      "expected": "ЛЕТО"
+    },
+    {
+      "id": 3,
+      "mode": "encrypt",
+      "text": "СВЕТ",
+      "key": {
+        "keyword": "ЛАМПА",
+        "shift": 1
+      },
+      "expected": "10 9C 15 5A"
+    },
+    {
+      "id": 4,
+      "mode": "encrypt",
+      "text": "ЗИМА",
+      "key": {
+        "keyword": "ОСЕНЬ",
+        "shift": 2
+      },
+      "expected": "1A D3 14 4C"
+    },
+    {
+      "id": 5,
+      "mode": "encrypt",
+      "text": "СТОЛ",
+      "key": {
+        "keyword": "КАРТА",
+        "shift": 1
+      },
+      "expected": "20 1B 0E 3C"
+    },
+    {
+      "id": 6,
+      "mode": "encrypt",
+      "text": "КТСО",
+      "key": {
+        "keyword": "УЧЁБА",
+        "shift": 2
+      },
+      "expected": "29 B5 29 B3"
+    },
+    {
+      "id": 7,
+      "mode": "encrypt",
+      "text": "ККСО",
+      "key": {
+        "keyword": "ЦЕНТР",
+        "shift": 1
+      },
+      "expected": "24 A1 16 15"
+    },
+    {
+      "id": 8,
+      "mode": "encrypt",
+      "text": "ФАЙЛ",
+      "key": {
+        "keyword": "ВИРУС",
+        "shift": 1
+      },
+      "expected": "04 D5 17 95"
+    },
+    {
+      "id": 9,
+      "mode": "encrypt",
+      "text": "УРОК",
+      "key": {
+        "keyword": "АДРЕС",
+        "shift": 1
+      },
+      "expected": "13 2E 11 BA"
+    },
+    {
+      "id": 10,
+      "mode": "encrypt",
+      "text": "МОРЕ",
+      "key": {
+        "keyword": "АРХИВ",
+        "shift": 1
+      },
+      "expected": "11 13 18 A1"
+    },
+    {
+      "id": 11,
+      "mode": "encrypt",
+      "text": "ПАРА",
+      "key": {
+        "keyword": "АГЕНТ",
+        "shift": 1
+      },
+      "expected": "02 1B 05 55"
+    },
+    {
+      "id": 12,
+      "mode": "encrypt",
+      "text": "КУРС",
+      "key": {
+        "keyword": "ХАКЕР",
+        "shift": 1
+      },
+      "expected": "2C 15 14 13"
+    }
+  ]
+}

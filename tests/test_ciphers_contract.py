@@ -73,6 +73,8 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
             {"key_hex": "FFEEDDCCBBAA99887766554433221100FEDCBA98765432100123456789ABCDEF"},
             "FEDCBA9876543210",
         ),
+        "rc5": ({"keyword": "КНИГА"}, "ЛЕТО"),
+        "rc6": ({"keyword": "КНИГА", "shift": 1}, "ЛЕТО"),
         "morse": ({}, "ТЕСТ МИР"),
         "vernam": ({"keyword": "...."}, "ТЕСТ"),
         "adfgvx": ({"keyword": "DRIVE"}, "TEST123"),
