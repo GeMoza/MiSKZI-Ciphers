@@ -66,12 +66,14 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
             {"size": 6, "rotation": "ccw", "filler": "А", "mask_id": "fig12"},
             "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВ",
         ),
+        "elgamal": ({"p": 11, "g": 2, "x": 9, "k": 7}, "4"),
         "richelieu": ({"permutations": [[4, 2, 1, 3]]}, "ТЕСТ"),
         "morse": ({}, "ТЕСТ МИР"),
         "vernam": ({"keyword": "...."}, "ТЕСТ"),
         "adfgvx": ({"keyword": "DRIVE"}, "TEST123"),
         "hill": ({"matrix": [[1, 2], [3, 5]]}, "ТЕСТ"),
         "ramsey": ({}, "PRACTICE MAKES PERFECT"),
+        "rsa": ({"p": 3, "q": 11, "e": 7}, "5"),
         "rubik_2x2": ({}, "РТУ МИРЭА"),
     }
 

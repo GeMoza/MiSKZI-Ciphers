@@ -65,3 +65,4 @@ docs/pdf/*
 .codex_tmp
 tmp/*
 run_project.bat
+.tmp_test_runs

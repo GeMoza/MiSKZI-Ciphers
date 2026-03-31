@@ -51,8 +51,12 @@ def test_registry_contract_loads_and_validates_without_bad_parse_key_calls():
             sample = "ТЕСТТЕ"
         elif name == "adfgvx":
             sample = "TEST"
+        elif name == "elgamal":
+            sample = "4"
         elif name == "ramsey":
             sample = "PRACTICE MAKES PERFECT"
+        elif name == "rsa":
+            sample = "5"
         elif name == "rubik_2x2":
             sample = "РТУ МИРЭА"
         enc = c.encrypt(sample, key)
