@@ -45,6 +45,8 @@ class ElGamalCipher:
             raise ValueError("elgamal: p must be a prime integer > 2.")
         if not (1 < g < p):
             raise ValueError("elgamal: g must satisfy 1 < g < p.")
+        if not _is_primitive_root_mod_prime(g, p):
+            raise ValueError(f"elgamal: g={g} must be a primitive root modulo p={p}.")
         if not (1 < x < p):
             raise ValueError("elgamal: x must satisfy 1 < x < p.")
         if not (1 < k < p - 1):
@@ -111,6 +113,36 @@ def _is_prime(value: int) -> bool:
         if value % divisor == 0:
             return False
         divisor += 2
+    return True
+
+
+def _prime_factors(value: int) -> set[int]:
+    factors: set[int] = set()
+    remainder = value
+
+    while remainder % 2 == 0:
+        factors.add(2)
+        remainder //= 2
+
+    divisor = 3
+    while divisor * divisor <= remainder:
+        while remainder % divisor == 0:
+            factors.add(divisor)
+            remainder //= divisor
+        divisor += 2
+
+    if remainder > 1:
+        factors.add(remainder)
+    return factors
+
+
+def _is_primitive_root_mod_prime(g: int, p: int) -> bool:
+    # For prime p, g is a primitive root iff for every prime divisor q of p-1:
+    # g^((p-1)/q) mod p != 1.
+    order = p - 1
+    for factor in _prime_factors(order):
+        if pow(g, order // factor, p) == 1:
+            return False
     return True
 
 

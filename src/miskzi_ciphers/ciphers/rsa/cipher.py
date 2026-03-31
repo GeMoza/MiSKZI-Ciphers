@@ -19,15 +19,15 @@ class RSACipher:
             "title": "Криптографический алгоритм RSA",
             "family": "public-key",
             "params": [
-                {"name": "p", "type": "int", "required": True, "help": "Простое число p", "example": 3},
-                {"name": "q", "type": "int", "required": True, "help": "Простое число q", "example": 11},
-                {"name": "e", "type": "int", "required": True, "help": "Открытый показатель e", "example": 7},
+                {"name": "p", "type": "int", "required": True, "help": "Простое число p", "example": 17},
+                {"name": "q", "type": "int", "required": True, "help": "Простое число q", "example": 23},
+                {"name": "e", "type": "int", "required": True, "help": "Открытый показатель e", "example": 3},
             ],
             "notes": (
                 "Учебная реализация RSA по ПЗ-06: parse_key() вычисляет n, phi(n) и d из p, q, e, "
                 "encrypt/decrypt работают с одной или несколькими десятичными величинами, разделёнными пробелами. "
                 "TODO: в локальной ПЗ-06 сейчас есть теория RSA, но не найдено явной таблицы нумерованных вариантов, "
-                "поэтому в data/tests зафиксирован минимальный учебный набор малых чисел."
+                "поэтому в data/tests зафиксирован учебный набор малых, но не совсем тривиальных чисел."
             ),
         }
 
