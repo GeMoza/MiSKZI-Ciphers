@@ -67,7 +67,12 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
             "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯАБВ",
         ),
         "elgamal": ({"p": 11, "g": 2, "x": 9, "k": 7}, "4"),
+        "feistel_network": ({"keyword": "ЛЕТО"}, "КТСО"),
         "richelieu": ({"permutations": [[4, 2, 1, 3]]}, "ТЕСТ"),
+        "magma": (
+            {"key_hex": "FFEEDDCCBBAA99887766554433221100FEDCBA98765432100123456789ABCDEF"},
+            "FEDCBA9876543210",
+        ),
         "morse": ({}, "ТЕСТ МИР"),
         "vernam": ({"keyword": "...."}, "ТЕСТ"),
         "adfgvx": ({"keyword": "DRIVE"}, "TEST123"),

@@ -53,6 +53,10 @@ def test_registry_contract_loads_and_validates_without_bad_parse_key_calls():
             sample = "TEST"
         elif name == "elgamal":
             sample = "4"
+        elif name == "feistel_network":
+            sample = "КТСО"
+        elif name == "magma":
+            sample = "FEDCBA9876543210"
         elif name == "ramsey":
             sample = "PRACTICE MAKES PERFECT"
         elif name == "rsa":
