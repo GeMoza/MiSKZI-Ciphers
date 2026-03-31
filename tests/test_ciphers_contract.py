@@ -68,6 +68,10 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         ),
         "elgamal": ({"p": 11, "g": 2, "x": 9, "k": 7}, "4"),
         "feistel_network": ({"keyword": "ЛЕТО"}, "КТСО"),
+        "kuznechik": (
+            {"key_hex": "8899AABBCCDDEEFF0011223344556677FEDCBA98765432100123456789ABCDEF"},
+            "1122334455667700FFEEDDCCBBAA9988",
+        ),
         "richelieu": ({"permutations": [[4, 2, 1, 3]]}, "ТЕСТ"),
         "magma": (
             {"key_hex": "FFEEDDCCBBAA99887766554433221100FEDCBA98765432100123456789ABCDEF"},

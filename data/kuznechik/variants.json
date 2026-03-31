@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "free_text": "1122334455667700FFEEDDCCBBAA9988",
+    "notes": "Project control set для темы 'Кузнечик'. В доступной локальной ПЗ-7 алгоритм только упоминается в конце как следующий шаг: нет полноценного описания, нумерованных вариантов и готовых методических примеров. Поэтому здесь зафиксирован минимальный обратимый контрольный набор для одного 128-битного блока в hex и 256-битного ключа в hex. Статус источника: methodics-theory-only.",
+    "raw_key_example": {
+      "key_hex": "8899AABBCCDDEEFF0011223344556677FEDCBA98765432100123456789ABCDEF"
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "mode": "encrypt",
+      "text": "1122334455667700FFEEDDCCBBAA9988",
+      "key": {
+        "key_hex": "8899AABBCCDDEEFF0011223344556677FEDCBA98765432100123456789ABCDEF"
+      },
+      "expected": "EA50CC8040482AD5231BF987FDBBFF8A"
+    },
+    {
+      "id": 2,
+      "mode": "decrypt",
+      "text": "EA50CC8040482AD5231BF987FDBBFF8A",
+      "key": {
+        "key_hex": "8899AABBCCDDEEFF0011223344556677FEDCBA98765432100123456789ABCDEF"
+      },
+      "expected": "1122334455667700FFEEDDCCBBAA9988"
+    }
+  ]
+}
