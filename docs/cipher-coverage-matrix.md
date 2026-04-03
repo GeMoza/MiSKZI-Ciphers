@@ -49,6 +49,7 @@
 | `rubik_2x2` | yes | yes | yes | yes | yes | Фиксированные методические векторы есть в `tests/test_pz5_rubik_vectors.py`; используется учебная развёртка 2x2 из ПЗ-05. |
 | `scytale` | yes | yes | no | yes | yes |  |
 | `trisemus` | yes | yes | no | yes | yes | Есть только roundtrip в `tests/test_pz3_vectors.py`. |
+| `toy_aes` | yes | yes | yes | yes | yes | Внешний учебный AES-подобный шифр из `docs/external-materials/Практические занятия №8.docx`; не относится к основной линии `docs/pdf/`. Реализация поддерживает только итоговый encrypt/decrypt-контракт для 4-байтовых hex-блоков без публичного trace промежуточных раундов. |
 | `vernam` | yes | yes | no | yes | yes | Есть только roundtrip в `tests/test_pz4_vectors.py`; реализован как учебная XOR-схема по `RU_33 + '.'`, а не общий байтовый OTP. |
 | `vigenere` | yes | yes | no | yes | yes | В `docs/methodics-mapping.md` отмечен как пограничный случай между ПЗ-2 и ПЗ-3; фиксированного вектора нет; используется русский алфавит. |
 

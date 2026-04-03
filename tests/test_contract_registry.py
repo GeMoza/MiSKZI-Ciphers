@@ -69,6 +69,8 @@ def test_registry_contract_loads_and_validates_without_bad_parse_key_calls():
             sample = "5"
         elif name == "rubik_2x2":
             sample = "РТУ МИРЭА"
+        elif name == "toy_aes":
+            sample = "00020A00"
         enc = c.encrypt(sample, key)
         dec = c.decrypt(enc, key)
         assert isinstance(enc, str)

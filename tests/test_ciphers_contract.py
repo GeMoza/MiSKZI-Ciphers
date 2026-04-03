@@ -86,6 +86,7 @@ def _roundtrip_cases() -> dict[str, tuple[dict, str]]:
         "ramsey": ({}, "PRACTICE MAKES PERFECT"),
         "rsa": ({"p": 3, "q": 11, "e": 7}, "5"),
         "rubik_2x2": ({}, "РТУ МИРЭА"),
+        "toy_aes": ({"key_hex": "0B1F0C18"}, "00020A00"),
     }
 
 
