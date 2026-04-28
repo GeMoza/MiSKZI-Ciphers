@@ -68,3 +68,4 @@ docs/external-materials/*
 tmp/*
 run_project.bat
 .tmp_test_runs
+.tmp_codex
