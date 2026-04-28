@@ -7,6 +7,8 @@ from miskzi_ciphers.practice.common.models import PracticeResult, PracticeTable
 from miskzi_ciphers.practice.common.normalization import RUSSIAN_ALPHABET
 from miskzi_ciphers.practice.practice_09.trace_caesar import trace_caesar
 from miskzi_ciphers.practice.practice_09.trace_gronsfeld import trace_gronsfeld_russian
+from miskzi_ciphers.practice.practice_09.trace_invert_255 import trace_invert_255
+from miskzi_ciphers.practice.practice_09.trace_pair_swap import trace_pair_swap
 from miskzi_ciphers.practice.practice_09.trace_vigenere import trace_vigenere_latin
 
 PRACTICE_ID = "practice_09"
@@ -47,8 +49,22 @@ def run_practice_09_algorithm(
             operation=operation,
         )
         parameters = {"key_numbers": key_numbers, "alphabet": RUSSIAN_ALPHABET}
+    elif algorithm_id == "invert_255":
+        output_text, normalized_text, steps, notes = trace_invert_255(
+            text,
+            operation=operation,
+        )
+        parameters = {"encoding": "Windows-1251", "rule": "y = 255 - x"}
+    elif algorithm_id == "pair_swap":
+        output_text, normalized_text, steps, notes = trace_pair_swap(
+            text,
+            operation=operation,
+        )
+        parameters = {"rule": "swap adjacent character pairs"}
     else:
-        raise ValueError("algorithm must be one of: caesar, vigenere, gronsfeld.")
+        raise ValueError(
+            "algorithm must be one of: caesar, vigenere, gronsfeld, invert_255, pair_swap."
+        )
 
     input_histogram, output_histogram = compare_histograms(normalized_text, output_text)
     table = PracticeTable(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from pathlib import Path
 
 import pytest
 
@@ -16,6 +17,8 @@ from miskzi_ciphers.practice.practice_09.presets import PRACTICE_09_VARIANT_5
 from miskzi_ciphers.practice.practice_09.service import run_practice_09_algorithm
 from miskzi_ciphers.practice.practice_09.trace_caesar import trace_caesar
 from miskzi_ciphers.practice.practice_09.trace_gronsfeld import trace_gronsfeld_russian
+from miskzi_ciphers.practice.practice_09.trace_invert_255 import trace_invert_255
+from miskzi_ciphers.practice.practice_09.trace_pair_swap import trace_pair_swap
 from miskzi_ciphers.practice.practice_09.trace_vigenere import trace_vigenere_latin
 
 
@@ -125,12 +128,53 @@ def test_gronsfeld_decrypt_variant_5_uses_number_key() -> None:
     assert steps[2].details["key_number"] == 13
 
 
+def test_invert_255_is_self_inverse_over_windows_1251() -> None:
+    encrypted, normalized, steps, notes = trace_invert_255("А", operation="encrypt")
+    decrypted, _, decrypt_steps, _ = trace_invert_255(encrypted, operation="decrypt")
+
+    assert normalized == "А"
+    assert encrypted == "?"
+    assert decrypted == "А"
+    assert steps[0].details["encoding"] == "cp1251"
+    assert steps[0].details["source_byte_decimal"] == 192
+    assert steps[0].details["source_byte_hex"] == "0xC0"
+    assert steps[0].details["result_byte_decimal"] == 63
+    assert steps[0].details["result_byte_hex"] == "0x3F"
+    assert decrypt_steps[0].formula == "255 - 63 = 192"
+    assert "educational byte-level transformation" in notes[0]
+
+
+def test_invert_255_preserves_unencodable_characters_in_trace() -> None:
+    output, _, steps, notes = trace_invert_255("🙂", operation="encrypt")
+
+    assert output == "🙂"
+    assert steps[0].details["skipped"] is True
+    assert "not encodable as Windows-1251" in notes[0]
+
+
+def test_pair_swap_examples_and_self_inverse() -> None:
+    encrypted_even, _, even_steps, _ = trace_pair_swap("ABCD", operation="encrypt")
+    encrypted_odd, _, odd_steps, _ = trace_pair_swap("ABCDE", operation="encrypt")
+    decrypted_odd, _, _, _ = trace_pair_swap(encrypted_odd, operation="decrypt")
+
+    assert encrypted_even == "BADC"
+    assert encrypted_odd == "BADCE"
+    assert decrypted_odd == "ABCDE"
+    assert even_steps[0].input_value == "AB"
+    assert even_steps[0].output_value == "BA"
+    assert odd_steps[-1].input_value == "E"
+    assert odd_steps[-1].details["is_unpaired_last_character"] is True
+    assert "preserved" in odd_steps[-1].comment
+
+
 @pytest.mark.parametrize(
     ("algorithm", "operation", "text", "params"),
     [
         ("caesar", "encrypt", "АБВ", {"shift": 1, "alphabet": "АБВГ"}),
         ("vigenere", "decrypt", "yoikyoj", {"key": "work"}),
         ("gronsfeld", "decrypt", "сепщвжрм", {"key_numbers": [7, 5, 13, 19]}),
+        ("invert_255", "encrypt", "А", {}),
+        ("pair_swap", "encrypt", "ABCDE", {}),
     ],
 )
 def test_run_practice_09_algorithm_for_supported_algorithms(
@@ -149,6 +193,17 @@ def test_run_practice_09_algorithm_for_supported_algorithms(
     assert len(result.histograms) == 2
 
 
+def test_service_runs_mvp_2_algorithms_as_practice_results() -> None:
+    invert_result = run_practice_09_algorithm("invert_255", "decrypt", "?", {})
+    pair_swap_result = run_practice_09_algorithm("pair_swap", "encrypt", "ABCD", {})
+
+    assert invert_result.output_text == "А"
+    assert invert_result.parameters["encoding"] == "Windows-1251"
+    assert invert_result.steps[0].details["result_byte_hex"] == "0xC0"
+    assert pair_swap_result.output_text == "BADC"
+    assert pair_swap_result.steps[0].details["pair_position"] == 1
+
+
 def test_cipher_adapter_keeps_regular_cipher_contract_usage() -> None:
     assert run_cipher("caesar", "encrypt", "АБВ", {"k": 1}) == "БВГ"
 
@@ -162,3 +217,10 @@ def test_cipher_protocol_is_not_extended_with_practice_members() -> None:
     assert "describe" in protocol_members
     assert "trace" not in protocol_members
     assert "histogram" not in protocol_members
+
+
+def test_regular_cipher_modules_do_not_import_practice_layer() -> None:
+    cipher_files = Path("src/miskzi_ciphers/ciphers").glob("*/cipher.py")
+
+    for path in cipher_files:
+        assert "miskzi_ciphers.practice" not in path.read_text(encoding="utf-8")

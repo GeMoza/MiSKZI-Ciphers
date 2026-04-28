@@ -16,4 +16,12 @@ PRACTICE_09_VARIANT_5 = {
         "ciphertext": "сепщвжрм",
         "key_numbers": [7, 5, 13, 19],
     },
+    "invert_255": {
+        "sample_text": "Пример",
+        "encoding": "Windows-1251",
+    },
+    "pair_swap": {
+        "sample_text": "ABCDE",
+        "rule": "swap adjacent character pairs",
+    },
 }
